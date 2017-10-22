@@ -36,11 +36,13 @@ routes.get('/getDiscList', (req, res) => {
     },
     params: req.query
   }).then((response) => {
+    console.log('11111')
     res.json(response.data)
   }).catch((err) => {
     console.log(err)
   })
 })
+app.use('/api', routes)
 
 
 const devMiddleware = require('webpack-dev-middleware')(compiler, {

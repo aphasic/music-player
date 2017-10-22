@@ -10,4 +10,21 @@ body, html
   .horizon-list-wrap
     overflow: hidden
     .list-item
-      float: left;
+      float: left
+  .list-title
+    height: 65px
+    line-height: 65px
+    text-align: center
+    font-size: $font-size-medium
+    color: $color-theme
+  .ellipse-1-line{
+    overflow: hidden
+    text-overflow:ellipsis
+    white-space: nowrap
+  }
+  .ellipse-2-line{
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }

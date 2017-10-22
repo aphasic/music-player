@@ -17,8 +17,8 @@ export function getRecommend () {
 }
 
 export function getDiscList () {
-  let url = 'https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg'
-  let data = Object.assign({}, commonParams, {
+  const url = 'api/getDiscList'
+  const data = Object.assign({}, commonParams, {
     platform: 'yqq',
     hostUin: 0,
     sin: 0,
@@ -26,21 +26,14 @@ export function getDiscList () {
     sortId: 5,
     needNewCode: 0,
     categoryId: 10000000,
-    rnd: Math.random()
+    rnd: Math.random(),
+    format: 'json'
   })
-  return new Promise((resolve, reject) => {
-    let instance = axios.create({
-      baseURL: 'https://c.y.qq.com/',
-      timeout: 1000,
-      headers: {
-        referer: 'https://y.qq.com/',
-        host: 'y.qq.com'
-      }
-    })
-    instance.get(url, data).then((response) => {
-      resolve(response.data)
-    }).catch((err) => {
-      reject(err)
-    })
+  return axios.get(url, {
+    params: data
+  }).then((res) => {
+    return Promise.resolve(res.data)
+  }).catch((err) => {
+    console.log(err)
   })
 }
