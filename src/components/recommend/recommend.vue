@@ -16,7 +16,7 @@
           <ul class="disc-list-wrap">
             <li class="list-item" v-for="item in discList">
               <div class="icon">
-                <img :src="item.imgurl" alt="img">
+                <img v-lazy="item.imgurl" alt="img">
               </div>
               <div class="text">
                 <h3 class="title ellipse-1-line">{{item.creator.name}}</h3>
