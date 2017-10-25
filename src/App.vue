@@ -1,10 +1,14 @@
 <template>
   <div id="app">
-    <main-header></main-header>
-    <main-nav></main-nav>
-    <keep-alive>
-      <router-view></router-view>
-    </keep-alive>
+    <div id="main_header">
+      <main-header></main-header>
+      <main-nav></main-nav>
+    </div>
+    <div id="main_content">
+      <keep-alive>
+        <router-view></router-view>
+      </keep-alive>
+    </div>
   </div>
 </template>
 
@@ -21,4 +25,14 @@
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "common/stylus/variable.styl"
+  #app
+    height: 100%
+    position: relative
+  #main_header
+    height: 88px
+  #main_content
+    width: 100%
+    position: absolute
+    top: 88px
+    bottom: 0
 </style>

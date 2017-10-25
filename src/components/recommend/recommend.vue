@@ -1,5 +1,5 @@
 <template>
-  <div class="wrap">
+  <div class="container">
     <scroll :data="discList" ref="scroll" class="scroll-content">
       <div>
         <div class="recommend-slider" ref="recommendSlider" v-if="recommends.length">
@@ -30,6 +30,7 @@
           </ul>
         </div>
       </div>
+      <loading v-if="!discList.length"></loading>
     </scroll>
   </div>
 </template>
@@ -39,6 +40,7 @@
   import {ERR_OK} from 'api/config'
   import Slider from 'base/slider/slider'
   import Scroll from 'base/scroll/scroll'
+  import Loading from 'base/loading/loading'
   export default {
     data () {
       return {
@@ -74,7 +76,8 @@
     },
     components: {
       Slider,
-      Scroll
+      Scroll,
+      Loading
     }
   }
 </script>
@@ -82,11 +85,8 @@
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~common/stylus/variable"
   @import "~common/stylus/base"
-  .wrap
-    width: 100%
-    position: fixed
-    top: 88px
-    bottom: 0
+  .container
+    height: 100%
     .scroll-content
       height: 100%
       overflow: hidden

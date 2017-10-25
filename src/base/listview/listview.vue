@@ -14,13 +14,13 @@
           <li class="list-group" v-for="item in listData" ref="listGroup">
             <h2 class="list-group-title">{{item.title}}</h2>
             <ul>
-              <li class="list-group-item" v-for="singer in item.items">
+              <li class="list-group-item" v-for="member in item.items" @click="selectItem(member)">
                 <div class="media-middle">
                   <div class="icon">
-                    <img v-lazy="singer.imgurl" alt="singer-img">
+                    <img v-lazy="member.imgurl" alt="member-img">
                   </div>
                   <div class="text">
-                    {{singer.name}}
+                    {{member.name}}
                   </div>
                 </div>
               </li>
@@ -28,6 +28,7 @@
           </li>
         </ul>
       </div>
+      <loading v-if="!listData.length"></loading>
     </scroll>
   </div>
 </template>
@@ -36,10 +37,7 @@
   @import "~common/stylus/variable"
   @import "~common/stylus/base"
   #listview_container
-    width: 100%
-    position: fixed
-    top: 88px
-    bottom: 0
+    height: 100%
     .list-group-title
       height: 30px
       line-height: 30px
@@ -84,6 +82,7 @@
 <script type="text/ecmascript-6">
   import Scroll from 'base/scroll/scroll'
   import {getAttr} from 'common/js/dom'
+  import Loading from 'base/loading/loading'
 
   const LIST_MARGIN = 20
   const SCROLL_TIME = 1000   // 滚动到某位置时的过渡时间
@@ -146,6 +145,9 @@
         this._scrollTo(_index)
       },
       // 计算每个字母区块滚动的高度，即其之前所有元素的高度
+      selectItem (item) {
+        this.$emit('selectItem', item)
+      },
       _calculateHeight () {
         let _height = 0
         let lists = this.$refs.listGroup
@@ -170,7 +172,8 @@
       }
     },
     components: {
-      Scroll
+      Scroll,
+      Loading
     },
     watch: {
       listData () {

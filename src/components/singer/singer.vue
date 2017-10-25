@@ -1,6 +1,7 @@
 <template>
-  <div>
-    <listview :listData="singerList"></listview>
+  <div class="container">
+    <listview :listData="singerList" @selectItem="selectSinger"></listview>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -9,19 +10,27 @@
   import {ERR_OK} from 'api/config'
   import {Singer} from 'common/js/class'
   import Listview from 'base/listview/listview'
+  import {mapMutations} from 'vuex'
 
   const HOT_NAME = '热门'
   const HOT_NUM = 10
   export default {
     data () {
       return {
-        singerList: []
+        singerList: [],
+        showDetail: false
       }
     },
     created () {
       this._getSingerList()
     },
     methods: {
+      selectSinger (singer) {
+        this.$router.push({
+          path: `/singer/${singer.id}`
+        })
+        this.setSinger(singer)
+      },
       _getSingerList () {
         getSingerList().then((res) => {
           if (res.code === ERR_OK) {
@@ -67,7 +76,10 @@
         // 将热门添加到数组头
         resArr.unshift(singerObj['hot'])
         return resArr
-      }
+      },
+      ...mapMutations({
+        setSinger: 'SET_SINGER'
+      })
     },
     components: {
       Listview
@@ -76,7 +88,6 @@
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
-  @import "~common/stylus/variable"
-
+  .container
+    height: 100%
 </style>
-
