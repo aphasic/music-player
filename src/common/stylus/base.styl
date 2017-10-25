@@ -17,14 +17,29 @@ body, html
     text-align: center
     font-size: $font-size-medium
     color: $color-theme
-  .ellipse-1-line{
+  .ellipse-1-line
     overflow: hidden
     text-overflow:ellipsis
     white-space: nowrap
-  }
-  .ellipse-2-line{
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-  }
+  .ellipse-2-line
+    display: -webkit-box
+    -webkit-box-orient: vertical
+    -webkit-line-clamp: 2
+    overflow: hidden
+  .media-middle
+    display: flex
+    align-items: center
+    .icon
+      width: 60px
+      height: 60px
+      flex: 0 0 60px
+      margin-right: 20px
+      img
+        width: 100%
+        height: 100%
+    .text
+      flex: 1
+      line-height: 20px
+      overflow: hidden
+      font-size: $font-size-medium
+

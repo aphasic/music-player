@@ -29,6 +29,10 @@
       refreshDelay: {
         type: Number,
         default: 20
+      },
+      listenScroll: {
+        type: Boolean,
+        default: false
       }
     },
     mounted () {
@@ -45,6 +49,12 @@
           probeType: this.probeType,
           click: this.click
         })
+        if (this.listenScroll) {
+          let me = this
+          this.scroll.on('scroll', (pos) => {
+            me.$emit('onscroll', pos)
+          })
+        }
       },
       disable () {
         this.scroll && this.scroll.disable()

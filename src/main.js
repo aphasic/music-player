@@ -18,5 +18,5 @@ new Vue({
 
 Vue.use(VueLazyload, {
   error: require('common/image/default.png'),
-  loading: require('common/image/default.png')
+  loading: require('common/image/loading.gif')
 })

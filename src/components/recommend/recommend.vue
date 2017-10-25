@@ -15,14 +15,16 @@
           <h2 class="list-title">热门歌单推荐</h2>
           <ul class="disc-list-wrap">
             <li class="list-item" v-for="item in discList">
-              <div class="icon">
-                <img v-lazy="item.imgurl" alt="img">
-              </div>
-              <div class="text">
-                <h3 class="title ellipse-1-line">{{item.creator.name}}</h3>
-                <p class="description ellipse-2-line">
-                  {{item.dissname}}
-                </p>
+              <div class="media-middle">
+                <div class="icon">
+                  <img v-lazy="item.imgurl" alt="img">
+                </div>
+                <div class="text">
+                  <h3 class="title ellipse-1-line">{{item.creator.name}}</h3>
+                  <p class="description ellipse-2-line">
+                    {{item.dissname}}
+                  </p>
+                </div>
               </div>
             </li>
           </ul>
@@ -79,6 +81,7 @@
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~common/stylus/variable"
+  @import "~common/stylus/base"
   .wrap
     width: 100%
     position: fixed
@@ -94,26 +97,13 @@
           width: 100%
       .disc-list-wrap
         .list-item
-          display: flex
-          align-items: center
           padding: 0 20px 20px 20px
-          .icon
-            width: 60px
-            padding-right: 20px
-            flex: 0 0 60px
-            img
-              width: 60px
-              height: 60px
-          .text
-            flex: 1
-            line-height: 20px
-            overflow: hidden
-            font-size: $font-size-medium
-            .title
-              color: $color-text
-              margin-bottom: 10px
-            .description
-              color: $color-text-d
-
+          .media-middle
+            .text
+              .title
+                color: $color-text
+                margin-bottom: 10px
+              .description
+                color: $color-text-d
 </style>
 

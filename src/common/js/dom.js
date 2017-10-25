@@ -15,3 +15,11 @@ export function addClass (el, className) {
   newClass.push(className)
   el.className = newClass.join(' ')
 }
+
+export function getAttr (ele, name, value) {
+  const PRE_FIX = 'data-'
+  if (value === undefined) {
+    return ele.getAttribute(PRE_FIX + name)
+  }
+  return ele.setAttribute(PRE_FIX + name, value)
+}
