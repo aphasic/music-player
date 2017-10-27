@@ -10,6 +10,10 @@
 【脚手架工具】：vue-cli</br>
 【自动化构建】：webpack</br>
 【代码检查】：eslint</br>
+- 项目运行：
+1. npm install
+2. npm run dev
+3. 访问 http://localhost:8080
 ## 当前进度：
 推荐（首页）、歌手页、歌手详情页初步完成
 ## 代码逻辑：
