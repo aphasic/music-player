@@ -8,7 +8,7 @@
 <script type="text/ecmascript-6">
   import {getSingerList} from 'api/singer'
   import {ERR_OK} from 'api/config'
-  import {Singer} from 'common/js/class'
+  import {createSinger} from 'controllers/singer'
   import Listview from 'base/listview/listview'
   import {mapMutations} from 'vuex'
 
@@ -27,7 +27,7 @@
     methods: {
       selectSinger (singer) {
         this.$router.push({
-          path: `/singer/${singer.id}`
+          path: `/singer/${singer.mid}`
         })
         this.setSinger(singer)
       },
@@ -50,7 +50,7 @@
         resList.forEach((item, index) => {
           // 前10个为热门推荐
           if (index < HOT_NUM) {
-            singerObj['hot'].items.push(new Singer({name: item.Fsinger_name, id: item.Fsinger_mid}))
+            singerObj['hot'].items.push(createSinger(item))
           }
           // 此后以item.Findex为title
           let key = item.Findex
@@ -60,7 +60,7 @@
               items: []
             }
           }
-          let singer = new Singer({name: item.Fsinger_name, id: item.Fsinger_mid})
+          let singer = createSinger(item)
           singerObj[key].items.push(singer)
         })
         // 将singerObj转换成数组，先将热门之外的像push,先排序

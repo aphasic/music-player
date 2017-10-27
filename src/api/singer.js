@@ -20,3 +20,20 @@ export function getSingerList () {
   let params = Object.assign({}, data, commonParams)
   return jsonp(url, params, options)
 }
+export function getSingerDetail (id) {
+  let url = 'https://c.y.qq.com/v8/fcg-bin/fcg_v8_singer_track_cp.fcg'
+  let data = {
+    singerid: id,
+    g_tk: 5381,
+    uin: 0,
+    platform: 'h5Page',
+    needNewCode: 1,
+    order: 'listen',
+    from: 'h5',
+    num: 80,
+    begin: 0,
+    _: '1508979735162'
+  }
+  let params = Object.assign({}, data, commonParams)
+  return jsonp(url, params, options)
+}

@@ -52,4 +52,20 @@ body, html
     left: 0
     z-index: 100
     background: $color-background
-
+  .align-center
+    text-align: center
+// 前后都有 line的样式
+  .text-with-line
+    position: relative
+    &:before,&:after
+      content: ''
+      display: block
+      width: 100px
+      height: 1px
+      background: rgba(255,255,255,0.1)
+      position: absolute
+      top: 50%
+    &:before
+      left: 0
+    &:after
+      left: 0
