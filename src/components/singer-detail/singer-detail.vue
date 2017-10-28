@@ -1,10 +1,10 @@
 <template>
   <transition name="slide">
-    <div class="full-page">
-      <scroll class="scroll-content" :data="songList">
+    <div class="h-full-page">
+      <singer-info :info="singerInfo" v-if="songList.length" @goBack="_goBack" :scrollY="scrollY"></singer-info>
+      <scroll class="scroll-content" :data="songList" :probeType="probeType" :listenScroll="true" @onscroll="onscroll" ref="scroll">
         <div>
-          <singer-info :info="singerInfo" v-if="songList.length"></singer-info>
-          <songlist :songlist="songList"></songlist>
+          <songlist :songlist="songList" :bgColor="listBgColor"></songlist>
         </div>
       </scroll>
       <loading v-if="!songList.length"></loading>
@@ -21,13 +21,17 @@
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
   import SingerInfo from './singer-info.vue'
+  const COLOR_BACKGROUND = '#222'
   export default {
     name: 'singer-detail',
     data () {
       return {
         songList: [],
         fans: '',
-        singerInfo: {}
+        singerInfo: {},
+        listBgColor: COLOR_BACKGROUND,
+        probeType: 3,
+        scrollY: 0
       }
     },
     created () {
@@ -51,6 +55,12 @@
           let data = song.musicData
           return createSong(data)
         })
+      },
+      _goBack () {
+        this.$router.back()
+      },
+      onscroll (pos) {
+        this.scrollY = pos.y
       }
     },
     components: {

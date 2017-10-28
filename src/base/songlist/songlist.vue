@@ -1,9 +1,9 @@
 <template>
   <div>
-    <ul class="song-list">
+    <ul class="song-list" ref="songList">
       <li class="list-item" v-for="item in songlist">
-        <h2 class="title ellipse-1-line">{{item.name}}</h2>
-        <p class="desc ellipse-1-line">
+        <h2 class="title h-ellipse-1-line">{{item.name}}</h2>
+        <p class="desc h-ellipse-1-line">
           <a class="singer" href="" v-for="(singer, index) in item.singer">
             <span v-if="index !== 0">/</span>
             {{singer.name}}
@@ -21,7 +21,15 @@
       songlist: {
         type: Array,
         default: []
+      },
+      bgColor: {
+        type: String,
+        default: 'transparent'
       }
+    },
+    mounted () {
+      console.log(this.bgColor)
+      this.$refs.songList.style.backgroundColor = this.bgColor
     },
     methods: {
       getDesc (song) {
@@ -36,7 +44,7 @@
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~common/stylus/variable"
   .song-list
-    padding: 10px 30px
+    padding: 10px 20px
     .list-item
       line-height: 20px
       height: 64px

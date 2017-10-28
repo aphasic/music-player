@@ -12,16 +12,16 @@
           </slider>
         </div>
         <div class="recommend-disc">
-          <h2 class="list-title">热门歌单推荐</h2>
+          <h2 class="h-list-title">热门歌单推荐</h2>
           <ul class="disc-list-wrap">
             <li class="list-item" v-for="item in discList">
-              <div class="media-middle">
+              <div class="h-media-middle">
                 <div class="icon">
                   <img v-lazy="item.imgurl" alt="img">
                 </div>
                 <div class="text">
-                  <h3 class="title ellipse-1-line">{{item.creator.name}}</h3>
-                  <p class="description ellipse-2-line">
+                  <h3 class="title h-ellipse-1-line">{{item.creator.name}}</h3>
+                  <p class="description h-ellipse-2-line">
                     {{item.dissname}}
                   </p>
                 </div>
@@ -98,7 +98,7 @@
       .disc-list-wrap
         .list-item
           padding: 0 20px 20px 20px
-          .media-middle
+          .h-media-middle
             .text
               .title
                 color: $color-text

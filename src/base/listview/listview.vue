@@ -15,7 +15,7 @@
             <h2 class="list-group-title">{{item.title}}</h2>
             <ul>
               <li class="list-group-item" v-for="member in item.items" @click="selectItem(member)">
-                <div class="media-middle">
+                <div class="h-media-middle">
                   <div class="icon">
                     <img v-lazy="member.imgurl" alt="member-img">
                   </div>
@@ -70,7 +70,7 @@
         .list-group
           .list-group-item
             margin: 20px 0 20px 30px
-            .media-middle
+            .h-media-middle
               .icon
                 width: 50px
                 height: 50px

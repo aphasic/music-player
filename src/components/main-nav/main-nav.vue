@@ -1,5 +1,5 @@
 <template>
-  <ul class="horizon-list-wrap nav-wrap">
+  <ul class="h-horizon-list-wrap nav-wrap">
     <li class="list-item">
       <router-link tag="a" class="link" to="/recommend"><span>推荐</span></router-link>
     </li>

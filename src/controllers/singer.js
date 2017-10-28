@@ -18,7 +18,6 @@ export function createSinger (singerData) {
 export function normalizeFans (fansnum) {
   let str = fansnum.toString()
   let len = str.length
-  console.log(len)
   if (len > 4) {
     return `${str.substring(0, len - 4)}万`
   }
