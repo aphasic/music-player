@@ -26,8 +26,7 @@
     props: {
       info: {
         type: Object,
-        default: {},
-        bgStyle: ''
+        default: {}
       },
       scrollY: {
         type: Number,
@@ -37,7 +36,8 @@
     data () {
       return {
         topHeight: 0,
-        wrapHeight: 0
+        wrapHeight: 0,
+        bgStyle: ''
       }
     },
     created () {
@@ -74,79 +74,75 @@
 <style scoped lang="stylus" rel="stylesheet/stylus">
   @import "~common/stylus/mixin"
   @import "~common/stylus/variable"
-  .singer-info
+  .title-name
+    padding: 5px
+    font-size: $font-size-large
+    text-align: center
+    line-height: 40px
+    color: $color-text
     position: relative
+  .wrap
     width: 100%
-    height: 0
-    padding-top: 70%
-    .title-name
-      padding: 5px
-      font-size: $font-size-large
-      text-align: center
-      line-height: 40px
-      color: $color-text
-      position: relative
-    .wrap
+    position: absolute
+    top: 0
+    bottom: 0
+    background-size: cover
+    background-position: center center
+    min-height: 50px
+    z-index: 80
+    &:before
+      content: ''
+      display: block
       width: 100%
+      height: 100%
+      background: rgba(7, 17, 27, 0.4)
       position: absolute
+      left: 0
       top: 0
-      bottom: 0
-      background-size: cover
-      background-position: center center
-      min-height: 50px
+    .title-name
+      position: relative
       z-index: 100
-      &:before
-        content: ''
-        display: block
-        width: 100%
-        height: 100%
-        background: rgba(7, 17, 27, 0.4)
+      .top-name
+        opacity: 0
+        transition: opacity 1s;
+      .icon-wrap
         position: absolute
-        left: 0
-        top: 0
-      .title-name
-        .top-name
-          opacity: 0
-          transition: opacity 1s;
-        .icon-wrap
-          position: absolute
-          left: 10px
-          top: 50%
-          -webkit-transform: translateY(-50%)
-          -moz-transform: translateY(-50%)
-          -ms-transform: translateY(-50%)
-          -o-transform: translateY(-50%)
-          transform: translateY(-50%)
-          color: $color-theme
-          font-size: $font-size-large-x
-      .content
-        position: absolute
-        bottom: 0
-        left: 0
-        width: 100%
+        left: 10px
+        top: 50%
+        -webkit-transform: translateY(-50%)
+        -moz-transform: translateY(-50%)
+        -ms-transform: translateY(-50%)
+        -o-transform: translateY(-50%)
+        transform: translateY(-50%)
+        color: $color-theme
+        font-size: $font-size-large-x
+    .content
+      position: absolute
+      bottom: 0
+      left: 0
+      width: 100%
+      text-align: center
+      .desc
+        color: rgba(255,255,255,0.5)
+        text-with-line(rgba(255,255,255,0.1))
+      .play-btn
+        box-sizing: border-box
+        width: 135px
+        padding: 7px 0
+        margin: 10px auto
         text-align: center
-        .desc
-          color: rgba(255,255,255,0.5)
-          text-with-line(rgba(255,255,255,0.1))
-        .play-btn
-          box-sizing: border-box
-          width: 135px
-          padding: 7px 0
-          margin: 10px auto
-          text-align: center
-          border: 1px solid $color-theme
-          color: $color-theme
-          border-radius: 100px
-          font-size: 0
-          .icon-play
-            display: inline-block
-            vertical-align: middle
-            margin-right: 6px
-            font-size: $font-size-medium-x
-          .text-play
-            display: inline-block
-            vertical-align: middle
-            font-size: $font-size-small
-
+        border: 1px solid $color-theme
+        color: $color-theme
+        border-radius: 100px
+        font-size: 0
+        .icon-play
+          display: inline-block
+          vertical-align: middle
+          margin-right: 6px
+          font-size: $font-size-medium-x
+        .text-play
+          display: inline-block
+          vertical-align: middle
+          font-size: $font-size-small
 </style>
 

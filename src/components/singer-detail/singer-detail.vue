@@ -1,7 +1,9 @@
 <template>
   <transition name="slide">
     <div class="h-full-page">
-      <singer-info :info="singerInfo" v-if="songList.length" @goBack="_goBack" :scrollY="scrollY"></singer-info>
+      <div class="singer-info-wrap" ref="singerInfoWrap">
+        <singer-info  :info="singerInfo" :scrollY="scrollY" @goBack="_goBack" v-if="songList.length"></singer-info>
+      </div>
       <scroll class="scroll-content" :data="songList" :probeType="probeType" :listenScroll="true" @onscroll="onscroll" ref="scroll">
         <div>
           <songlist :songlist="songList" :bgColor="listBgColor"></songlist>
@@ -46,6 +48,12 @@
         }
       })
     },
+    mounted () {
+      this.$nextTick(() => {
+        let imageHeight = this.$refs.singerInfoWrap.offsetHeight
+        this.$refs.scroll.$el.style.top = `${imageHeight}px`
+      })
+    },
     computed: {
       ...mapGetters(['singer'])
     },
@@ -77,7 +85,17 @@
     transition: all 0.3s
   .slide-enter, .slide-leave-to
     transform: translate3d(100%, 0, 0)
+  .singer-info-wrap
+    position: relative
+    width: 100%
+    height: 0
+    padding-top: 70%
   .scroll-content
-    height: 100%
+    position: absolute
+    top: 0
+    left: 0
+    bottom: 0
+    right: 0
+    width: 100%
 </style>
 
