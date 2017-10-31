@@ -67,6 +67,7 @@
       height: 100%
       overflow: hidden
       .main-list-wrap
+        padding-bottom: 1px
         .list-group
           .list-group-item
             margin: 20px 0 20px 30px
@@ -93,6 +94,10 @@
       listData: {
         type: Array,
         default: []
+      },
+      isRefreshScroll: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -180,6 +185,11 @@
         setTimeout(() => {
           this._calculateHeight()
         }, 20)
+      },
+      isRefreshScroll (newData) {
+        if (newData === true) {
+          this.$refs.scroll.refresh()
+        }
       }
     }
   }

@@ -1,7 +1,7 @@
 <template>
   <div>
     <ul class="song-list" ref="songList">
-      <li class="list-item" v-for="item in songlist">
+      <li class="list-item" v-for="(item, index) in songlist" @click="onItemClick(item, index)">
         <h2 class="title h-ellipse-1-line">{{item.name}}</h2>
         <p class="desc h-ellipse-1-line">
           <a class="singer" href="" v-for="(singer, index) in item.singer">
@@ -37,6 +37,9 @@
           return `-${song.desc}`
         }
         return `-${song.albumname}`
+      },
+      onItemClick (item, index) {
+        this.$emit('selectItem', item, index)
       }
     }
   }

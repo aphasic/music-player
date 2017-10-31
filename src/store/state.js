@@ -2,6 +2,15 @@
  * Created by HHH on 2017/10/25.
  */
 const state = {
-  singer: {}
+  singer: {},
+  isPlayerCreated: false,
+  player: {
+    isPlaying: false,
+    isFullpage: false,
+    playList: [],
+    sequenceList: [],
+    playMode: 0,
+    currentIndex: -1
+  }
 }
 export default state

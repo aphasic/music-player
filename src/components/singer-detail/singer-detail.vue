@@ -6,7 +6,7 @@
       </div>
       <scroll class="scroll-content" :data="songList" :probeType="probeType" :listenScroll="true" @onscroll="onscroll" ref="scroll">
         <div>
-          <songlist :songlist="songList" :bgColor="listBgColor"></songlist>
+          <songlist :songlist="songList" :bgColor="listBgColor" @selectItem="selectItem"></songlist>
         </div>
       </scroll>
       <loading v-if="!songList.length"></loading>
@@ -15,17 +15,20 @@
 </template>
 
 <script type="text/ecmascript-6">
-  import {mapGetters} from 'vuex'
-  import {getSingerDetail} from 'api/singer'
-  import Songlist from 'base/songlist/songlist'
   import {ERR_OK} from 'api/config'
+  import {getSingerDetail} from 'api/singer'
   import {createSong} from 'controllers/song'
+  import {mapGetters} from 'vuex'
+  import {playerMixin, playerCreatedMixin} from 'controllers/mixin'
+  import {playerHeight} from 'controllers/player'
+  import Songlist from 'base/songlist/songlist'
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
   import SingerInfo from './singer-info.vue'
   const COLOR_BACKGROUND = '#222'
   export default {
     name: 'singer-detail',
+    mixins: [playerMixin, playerCreatedMixin],
     data () {
       return {
         songList: [],
@@ -59,6 +62,8 @@
     },
     methods: {
       _normalizeSong (resData) {
+//        console.log('singerDetailData:')
+//        console.log(resData)
         return resData.map((song) => {
           let data = song.musicData
           return createSong(data)
@@ -69,6 +74,20 @@
       },
       onscroll (pos) {
         this.scrollY = pos.y
+      },
+      selectItem (song, index) {
+        if (!this.player.isCreated) {
+          this.setIsCreated(true)
+        }
+        this.setSequenceList(this.songList)
+        this.setCurrentIndex(index)
+        this._changePlayList(this.songList, this.player.playMode)
+      },
+      onPlayerCreated (flag) {
+        if (flag === true) {
+          this.$refs.scroll.$el.style.bottom = `${playerHeight}px`
+          this.$refs.scroll.refresh()
+        }
       }
     },
     components: {

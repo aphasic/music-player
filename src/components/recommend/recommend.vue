@@ -37,11 +37,13 @@
 
 <script type="text/ecmascript-6">
   import {getRecommend, getDiscList} from 'api/recommend'
+  import {playerCreatedMixin} from 'controllers/mixin'
   import {ERR_OK} from 'api/config'
   import Slider from 'base/slider/slider'
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
   export default {
+    mixins: [playerCreatedMixin],
     data () {
       return {
         recommends: [],
@@ -70,6 +72,11 @@
       loadImg () {
         if (!this.checkLoad) {
           this.checkLoad = true
+          this.$refs.scroll.refresh()
+        }
+      },
+      onPlayerCreated (flag) {
+        if (flag === true) {
           this.$refs.scroll.refresh()
         }
       }

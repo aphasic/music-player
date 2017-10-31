@@ -2,7 +2,7 @@
  * Created by HHH on 2017/10/26.
  */
 export default class Song {
-  constructor ({id, mid, singer, name, url, desc, albumname}) {
+  constructor ({id, mid, singer, name, url, desc, albumname, image}) {
     this.id = id
     this.mid = mid
     this.singer = singer
@@ -10,6 +10,7 @@ export default class Song {
     this.url = url
     this.desc = desc
     this.albumname = albumname
+    this.image = image
   }
 }
 
@@ -21,6 +22,7 @@ export function createSong (songData) {
     name: songData.songname,
     url: `http://ws.stream.qqmusic.qq.com/${songData.songid}.m4a?fromtag=46`,
     desc: songData.albumdesc,
-    albumname: songData.albumname
+    albumname: songData.albumname,
+    image: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${songData.albummid}.jpg?max_age=2592000`
   })
 }

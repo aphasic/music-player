@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <listview :listData="singerList" @selectItem="selectSinger"></listview>
+    <listview :listData="singerList" @selectItem="selectSinger" :isRefreshScroll="isRefreshScroll"></listview>
     <router-view></router-view>
   </div>
 </template>
@@ -11,14 +11,17 @@
   import {createSinger} from 'controllers/singer'
   import Listview from 'base/listview/listview'
   import {mapMutations} from 'vuex'
+  import {playerCreatedMixin} from 'controllers/mixin'
 
   const HOT_NAME = '热门'
   const HOT_NUM = 10
   export default {
+    mixins: [playerCreatedMixin],
     data () {
       return {
         singerList: [],
-        showDetail: false
+        showDetail: false,
+        isRefreshScroll: false
       }
     },
     created () {
@@ -79,7 +82,12 @@
       },
       ...mapMutations({
         setSinger: 'SET_SINGER'
-      })
+      }),
+      onPlayerCreated (flag) {
+        if (flag === true) {
+          this.isRefreshScroll = true
+        }
+      }
     },
     components: {
       Listview
