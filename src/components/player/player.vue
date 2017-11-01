@@ -3,10 +3,10 @@
     <transition name="normal">
       <div class="normal-player" v-show="player.isFullpage">
         <div class="background">
-          <img src="../../common/image/default.png" alt="img">
+          <img :src="currentSong.image" alt="img">
         </div>
         <div class="top-content">
-          <div class="icon" @click="_goBack">
+          <div class="icon" @click="back">
             <i class="icon-back"></i>
           </div>
           <h2 class="title h-ellipse-1-line">{{currentSong.name}}</h2>
@@ -17,27 +17,32 @@
             </span>
           </h3>
         </div>
-        <div class="cd-content">
+        <div class="cd-content" :class="cdClass">
           <img :src="currentSong.image" alt="img">
         </div>
         <div class="lyric-content">
-          dfhetu
+          歌词区域
         </div>
         <div class="bottom-content">
           <div class="progress-wrap">
+            <span class="time time-left">{{audio.currentTime}}</span>
+            <div class="progress">
+              <progress-bar :percent="audio.percent"></progress-bar>
+            </div>
+            <span class="time time-right">{{audio.duration}}</span>
           </div>
           <div class="control-wrap">
             <div class="control-icon">
-              <i class="icon-prev"></i>
+              <i class="icon-sequence"></i>
             </div>
             <div class="control-icon">
               <i class="icon-prev"></i>
             </div>
-            <div class="control-icon">
-              <i class="icon-prev"></i>
+            <div class="control-icon control-play-icon">
+              <i :class="playIcon" @click="togglePlaying"></i>
             </div>
             <div class="control-icon">
-              <i class="icon-prev"></i>
+              <i class="icon-next"></i>
             </div>
             <div class="control-icon">
               <i class="icon-prev"></i>
@@ -47,7 +52,7 @@
       </div>
     </transition>
     <transition name="mini">
-      <div class="mini-palyer" v-show="!player.isFullpage" @click="_goFullpage">
+      <div class="mini-palyer" v-show="!player.isFullpage" @click="open">
         <div class="left h-media-middle">
           <div class="icon">
             <img src="../../common/image/default.png" alt="img">
@@ -72,33 +77,95 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="currentSong.url"></audio>
+    <audio ref="audio" :src="currentSong.url" @error="audio.error" @timeupdate="audio.updateTime"
+           @ended="audio.end"></audio>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
   import {playerCreatedMixin, playerMixin} from 'controllers/mixin'
+  import progressBar from 'base/progress-bar/progress-bar'
+  import {normalizeTime} from 'common/js/util'
   export default {
     mixins: [playerCreatedMixin, playerMixin],
     data () {
       return {
         isPlayerShow: false,
-        songReady: false
+        audio: {}
       }
     },
     created () {
-      console.log(this.player)
-      console.log(this.currentSong)
+      this.audio = {
+        isReady: false,
+        isPlaying: this.player.isPlaying,
+        currentTime: '00:00',
+        duration: normalizeTime(this.currentSong.duration),
+        percent: 0,
+        play: () => {
+          this.$refs.audio.play()
+        },
+        pause: () => {
+          this.$refs.audio.pause()
+        },
+        error: () => {
+          this.audio.isReady = true
+        },
+        end: () => {
+          console.log('end')
+        },
+        updateTime: (e) => {
+          let currentTime = e.target.currentTime
+          this.audio.currentTime = normalizeTime(currentTime)
+          this.audio.percent = currentTime / this.currentSong.duration
+        }
+      }
+    },
+    computed: {
+      playIcon () {
+        return this.audio.isPlaying ? 'icon-pause' : 'icon-play'
+      },
+      cdClass () {
+        return this.audio.isPlaying ? 'play' : 'play pause'
+      },
+      progress () {
+        return this.audio.currentTime
+      }
     },
     methods: {
       onPlayerCreated (flag) {
         this.isPlayerShow = flag
       },
-      _goBack () {
+      back () {
         this.setFullPage(false)
       },
-      _goFullpage () {
+      open () {
         this.setFullPage(true)
+      },
+      togglePlaying () {
+        let newFlag = !this.audio.isPlaying
+        this.setPlayingState(newFlag)
+        this.audio.isPlaying = newFlag
+        newFlag ? this.audio.play() : this.audio.pause()
+      }
+    },
+    components: {
+      progressBar
+    },
+    watch: {
+//      'player.isPlaying': function (newFlag) {
+//        this.$nextTick(() => {
+//          newFlag ? this.audio.play() : this.audio.pause()
+//        })
+//      },
+      currentSong: function (newSong, oldSong) {
+        if (!newSong.id) {
+          return
+        }
+        if (newSong.id === oldSong) {
+          return
+        }
+        console.log(newSong)
+        console.log(oldSong)
       }
     }
   }
@@ -151,6 +218,10 @@
       padding-top: 80%
       margin: 25px auto
       position: relative
+      &.play
+        animation: rotate 20s linear infinite
+      &.pause
+        animation-play-state: paused
       img
         display: block
         position: absolute
@@ -163,17 +234,34 @@
         box-sizing: border-box
     .bottom-content
       position: absolute
-      left: 5%
+      left: 10%
       bottom: 50px
-      width: 90%
+      width: 80%
+      .progress-wrap
+        display: flex
+        justify-content: space-between
+        align-items: center
+        .time
+          width: 30px
+          padding: 0 10px
+          color: $color-text
+          font-size: $font-size-small
+          line-height: 30px
+          text-align: center
+        .progress
+          flex: 1
+          height: 4px
       .control-wrap
         display: flex
+        justify-content: space-between
+        align-items: center
         .control-icon
-          flex: 1
           padding: 0 10px
           font-size: 30px
           text-align: center
           color: $color-theme
+          &.control-play-icon
+            font-size: 40px
     &.normal-enter-active, &.normal-leave-active
       transition: all 0.4s
       .top-content, .bottom-content

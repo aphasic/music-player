@@ -15,3 +15,11 @@ export function shuffle (arr) {
   }
   return _arr
 }
+// 将传入的秒数转换成 XX（分）:XX（秒） 的形式
+export function normalizeTime (interval) {
+  let minute = Math.floor(interval / 60)
+  let second = Math.floor(interval % 60)
+  minute = minute.toString().padStart(2, '00')
+  second = second.toString().padStart(2, '00')
+  return `${minute}:${second}`
+}

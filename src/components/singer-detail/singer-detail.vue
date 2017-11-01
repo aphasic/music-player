@@ -82,6 +82,7 @@
         this.setSequenceList(this.songList)
         this.setCurrentIndex(index)
         this._changePlayList(this.songList, this.player.playMode)
+        this.setPlayingState(true)
       },
       onPlayerCreated (flag) {
         if (flag === true) {

@@ -9,7 +9,7 @@
         <router-view></router-view>
       </keep-alive>
     </div>
-    <player></player>
+    <player v-if="isPlayerCreated"></player>
   </div>
 </template>
 
