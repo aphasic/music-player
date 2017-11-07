@@ -23,3 +23,9 @@ export function normalizeTime (interval) {
   second = second.toString().padStart(2, '00')
   return `${minute}:${second}`
 }
+// 根据传入的字符串属性和传入的单位，截取字符串，删除单位，并转换成数值
+// 如传入left值为 32px, 返回数值类型的 32
+export function deleteUnit (attrStr, unit) {
+  let index = attrStr.indexOf(unit)
+  return parseInt(attrStr.slice(0, index))
+}

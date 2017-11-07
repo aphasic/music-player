@@ -15,6 +15,7 @@
 </template>
 
 <script type="text/ecmascript-6">
+  // singer-detail 组件是singer中的子路由中构建的，fixed 定位， 整体z-index 为 50
   import {ERR_OK} from 'api/config'
   import {getSingerDetail} from 'api/singer'
   import {createSong} from 'controllers/song'

@@ -4,10 +4,10 @@
       <li class="list-item" v-for="(item, index) in songlist" @click="onItemClick(item, index)">
         <h2 class="title h-ellipse-1-line">{{item.name}}</h2>
         <p class="desc h-ellipse-1-line">
-          <a class="singer" href="" v-for="(singer, index) in item.singer">
+          <span class="singer" v-for="(singer, index) in item.singer">
             <span v-if="index !== 0">/</span>
             {{singer.name}}
-          </a>
+          </span>
           {{getDesc(item)}}
         </p>
       </li>

@@ -27,6 +27,7 @@ const compiler = webpack(webpackConfig)
 
 //定义 axios 代理的路由
 const routes = express.Router()
+// 获取推荐歌单
 routes.get('/getDiscList', (req, res) => {
   let url = "https://c.y.qq.com/splcloud/fcgi-bin/fcg_get_diss_by_tag.fcg"
   axios.get(url, {
@@ -36,8 +37,30 @@ routes.get('/getDiscList', (req, res) => {
     },
     params: req.query
   }).then((response) => {
-    console.log('11111')
     res.json(response.data)
+  }).catch((err) => {
+    console.log(err)
+  })
+})
+// 获取歌词
+routes.get('/getLyric', (req, res) => {
+  let url = "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric.fcg"
+  axios.get(url, {
+    headers: {
+      referer: 'https://y.qq.com/',
+      host: 'y.qq.com'
+    },
+    params: req.query
+  }).then((response) => {
+    let ret = response.data
+    if (typeof ret === 'string') {
+      let reg = /^\w+\(({[^()]+})\)$/
+      let matches = ret.match(reg)
+      if (matches) {
+        ret = JSON.parse(matches[1])
+      }
+    }
+    res.json(ret)
   }).catch((err) => {
     console.log(err)
   })
