@@ -24,14 +24,18 @@
                 <div class="cd-content" :class="cdClass">
                   <img :src="currentSong.image" alt="img">
                 </div>
+                <p class="lyric">{{playingLyric}}</p>
               </div>
             </div>
             <div class="slider-item">
               <div class="lyric-page">
-                <scroll :data="currentLyric" ref="scroll" class="scroll-content">
+                <scroll :data="currentLyric && currentLyric.lines" ref="lyricScroll" class="scroll-content">
                   <div>
-                    <div class="lines-wrap">
-                      <p class="line" v-for="(line, index) in currentLyric.lines">{{line.txt}}</p>
+                    <div v-if="!currentLyric">
+                      {{lyricErr}}
+                    </div>
+                    <div class="lines-wrap" v-if="currentLyric">
+                      <p ref="lyricLine" class="line" :class="currentLyricIndex === index ? 'active':''" v-for="(line, index) in currentLyric.lines">{{line.txt}}</p>
                     </div>
                   </div>
                 </scroll>
@@ -41,11 +45,11 @@
         </div>
         <div class="bottom-content">
           <div class="progress-wrap">
-            <span class="time time-left">{{currentTime}}</span>
+            <span class="time time-left">{{normalizeTime(currentTime)}}</span>
             <div class="progress">
               <progress-bar :percent="percent"></progress-bar>
             </div>
-            <span class="time time-right">{{duration}}</span>
+            <span class="time time-right">{{normalizeTime(currentSong.duration)}}</span>
           </div>
           <div class="control-wrap">
             <div class="control-icon">
@@ -95,7 +99,7 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="currentSong.url" @loadeddata="_ready" @timeupdate="_updateTime"></audio>
+    <audio ref="audio" :src="currentSong.url" @play="_audioPlay" @pause="_audioPause" @canplay="_canPlay" @timeupdate="_updateTime"></audio>
   </div>
 </template>
 
@@ -109,16 +113,22 @@
   import fadeSlider from 'base/fade-slider/fade-slider'
 
   const MINI_BTN_WIDTH = 30
+  const LYRIC_ERR = '没有歌词~ '
   export default {
     mixins: [playerCreatedMixin, playerMixin],
     data () {
       return {
         isPlayerShow: false,
-        currentTime: '00:00',
-        currentLyric: {},
+        currentTime: 0,
+        currentLyric: null,
+        currentLyricIndex: -1,
+        playingLyric: '',
         radius: MINI_BTN_WIDTH,
         percent: 0,
-        zindexClass: 'can-click'
+        zindexClass: 'can-click',
+        normalizeTime: normalizeTime,
+        lyricErr: LYRIC_ERR,
+        songReady: false                      // audio 是否 canPlay
       }
     },
     created () {
@@ -135,10 +145,7 @@
         return this.player.isPlaying ? 'play' : 'play pause'
       },
       progress () {
-        return this.audio.currentTime
-      },
-      duration () {
-        return normalizeTime(this.currentSong.duration)
+        return this.currentTime
       }
     },
     methods: {
@@ -166,25 +173,54 @@
       _pause () {
         this.$refs.audio.pause()
       },
-      _ready () {
-        let audio = this.$refs.audio
-        this.$nextTick(() => {
-          audio.play()
-        })
+      // 考虑到 canplay 播放后可能因为网速而导致中途暂停，加载成功后继续播放
+      // 所以将 audio 的 播放和暂停事件提出来，避免音乐暂停了而歌词却在继续播放
+      _audioPlay () {
+        if (this.currentLyric) {
+          this.currentLyric.togglePlay()
+        }
+      },
+      _audioPause () {
+        if (this.currentLyric) {
+          this.currentLyric.togglePlay()
+        }
+      },
+      _canPlay () {
+        this.songReady = true
+        if (this.player.isPlaying) {
+          this.$nextTick(() => {
+            this._play()
+            this.$refs.lyricScroll.scrollTo(0, 0, 1000)
+          })
+        }
       },
       _updateTime (e) {
         let currentTime = e.target.currentTime
-        this.currentTime = normalizeTime(currentTime)
+        this.currentTime = currentTime
         this.percent = currentTime / this.currentSong.duration
       },
       _getLyric () {
         this.currentSong.getLyric().then((lyric) => {
           this.currentLyric = new Lyric(lyric, this._handleLyric)
-          console.log(this.currentLyric)
+          // songReady 为true就说明 audio 已经加载并播放了，即歌词获取较慢
+          // 在 audio 的 play 事件里面歌词尚未获取到所以没有设置播放，因此此处要设置歌词播放
+          if (this.songReady && this.player.isPlaying) {
+            this.currentLyric.seek(this.currentTime * 1000)
+          }
+        }).catch(() => {
+          this.currentLyric = null
+          this.playingLyric = LYRIC_ERR
+          this.currentLineNum = 0
         })
       },
       _handleLyric ({lineNum, txt}) {
-        console.log(lineNum)
+        this.currentLyricIndex = lineNum
+        this.playingLyric = txt
+        if (lineNum > 5) {
+          console.log(this.$refs.lyricScroll)
+          let line = this.$refs.lyricLine[lineNum - 5]
+          this.$refs.lyricScroll.scrollToElement(line, 1000)
+        }
       }
     },
     components: {
@@ -206,6 +242,13 @@
         if (newSong.id === oldSong) {
           return
         }
+        if (this.currentLyric) {
+          this.currentLyric.stop()
+          this.playingLyric = ''
+          this.currentLineNum = 0
+        }
+        this.currentTime = 0
+        this.songReady = false
         this._getLyric()
       }
     }
@@ -266,6 +309,15 @@
         .cd-page
           width: 100%
           height: 100%
+          .lyric
+            width: 80%
+            margin: 20px auto
+            overflow: hidden
+            text-align: center
+            height: 20px
+            line-height: 20px
+            font-size: $font-size-medium
+            color: $color-text-l
           .cd-content
             width: 80%
             margin: auto
@@ -300,7 +352,7 @@
                 line-height: 32px
                 color: $color-text-l
                 font-size: $font-size-medium
-                &.current
+                &.active
                   color: $color-text
     .bottom-content
       position: absolute

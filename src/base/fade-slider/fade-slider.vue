@@ -1,7 +1,7 @@
 <template>
   <div class="slider" ref="slider">
-    <div class="slider-items-wrap" ref="sliderItemsWrap" @touchstart.prevent="onTouchStart"
-         @touchmove.prevent="onTouchMove"
+    <div class="slider-items-wrap" ref="sliderItemsWrap" @touchstart="onTouchStart"
+         @touchmove="onTouchMove"
          @touchend="onTouchEnd">
       <slot>
       </slot>
@@ -83,7 +83,8 @@
         startY: 0,
         moved: false,     // 触摸是否移动，初始化每次触摸的部分数据
         key: '',           // 移动的 page 是 pages 中的哪一页，存储对应键值
-        deltaX: 0          // 移动过程中 X 的增值
+        deltaX: 0,          // 移动过程中 X 的增值
+        deltaY: 0
       }
     },
     mounted () {
@@ -164,6 +165,7 @@
         let deltaX = touch.pageX - this.touch.startX
         let deltaY = touch.pageY - this.touch.startY
         this.touch.deltaX = deltaX
+        this.touch.deltaY = deltaY
         if (Math.abs(deltaY) > Math.abs(deltaX)) {
           return
         }
@@ -194,6 +196,9 @@
         // 如果 key 为空串，需要移动的页是缺失页，则不进行移动操作，直接返回
         if (!this.touch.key) {
           this.touch.moved = false
+          return
+        }
+        if (Math.abs(this.touch.deltaY) > Math.abs(this.touch.deltaX)) {
           return
         }
         let children = this.$refs.sliderItemsWrap.children

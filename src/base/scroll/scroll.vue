@@ -76,6 +76,7 @@
       data: {
         handler (newValue, oldValue) {
           setTimeout(() => {
+            console.log('refresh')
             this.refresh()
           }, this.refreshDelay)
         },
