@@ -36,9 +36,9 @@
       }
     },
     mounted () {
-      setTimeout(() => {
+      this.$nextTick(() => {
         this._initScroll()
-      }, 20)
+      })
     },
     methods: {
       _initScroll () {
@@ -76,7 +76,7 @@
       data: {
         handler (newValue, oldValue) {
           setTimeout(() => {
-            console.log('refresh')
+            console.log(this.$el)
             this.refresh()
           }, this.refreshDelay)
         },

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="player.playList.length > 0">
+  <div v-show="player.playList.length > 0">
     <transition name="normal">
       <div class="normal-player" v-show="player.isFullpage">
         <div class="background">
@@ -29,12 +29,12 @@
             </div>
             <div class="slider-item">
               <div class="lyric-page">
-                <scroll :data="currentLyric && currentLyric.lines" ref="lyricScroll" class="scroll-content">
-                  <div>
+                <scroll :data="lyricData" ref="lyricScroll" class="scroll-content">
+                  <div class="lines-wrap">
                     <div v-if="!currentLyric">
-                      {{lyricErr}}
+                      <p class="line">{{lyricErr}}</p>
                     </div>
-                    <div class="lines-wrap" v-if="currentLyric">
+                    <div v-if="currentLyric">
                       <p ref="lyricLine" class="line" :class="currentLyricIndex === index ? 'active':''" v-for="(line, index) in currentLyric.lines">{{line.txt}}</p>
                     </div>
                   </div>
@@ -131,10 +131,13 @@
         songReady: false                      // audio 是否 canPlay
       }
     },
-    created () {
+    mounted () {
       this._getLyric()
     },
     computed: {
+      lyricData () {
+        return this.currentLyric ? this.currentLyric.lines : []
+      },
       playIcon () {
         return this.player.isPlaying ? 'icon-pause' : 'icon-play'
       },
@@ -202,11 +205,12 @@
       _getLyric () {
         this.currentSong.getLyric().then((lyric) => {
           this.currentLyric = new Lyric(lyric, this._handleLyric)
+          console.log(this.currentLyric)
           // songReady 为true就说明 audio 已经加载并播放了，即歌词获取较慢
           // 在 audio 的 play 事件里面歌词尚未获取到所以没有设置播放，因此此处要设置歌词播放
-          if (this.songReady && this.player.isPlaying) {
-            this.currentLyric.seek(this.currentTime * 1000)
-          }
+//          if (this.songReady && this.player.isPlaying) {
+//            this.currentLyric.seek(this.currentTime * 1000)
+//          }
         }).catch(() => {
           this.currentLyric = null
           this.playingLyric = LYRIC_ERR
@@ -215,12 +219,12 @@
       },
       _handleLyric ({lineNum, txt}) {
         this.currentLyricIndex = lineNum
-        this.playingLyric = txt
-        if (lineNum > 5) {
-          console.log(this.$refs.lyricScroll)
-          let line = this.$refs.lyricLine[lineNum - 5]
-          this.$refs.lyricScroll.scrollToElement(line, 1000)
-        }
+//        this.playingLyric = txt
+//        if (lineNum > 5) {
+//          console.log(this.$refs.lyricScroll)
+//          let line = this.$refs.lyricLine[lineNum - 5]
+//          this.$refs.lyricScroll.scrollToElement(line, 1000)
+//        }
       }
     },
     components: {
@@ -230,11 +234,13 @@
       Scroll
     },
     watch: {
-//      'player.isPlaying': function (newFlag) {
-//        this.$nextTick(() => {
-//          newFlag ? this.audio.play() : this.audio.pause()
-//        })
-//      },
+      'player.isFullpage': function (newFlag) {
+        if (newFlag) {
+          this.$nextTick(() => {
+            this.$refs.lyricScroll.refresh()
+          })
+        }
+      },
       currentSong: function (newSong, oldSong) {
         if (!newSong.id) {
           return
@@ -243,7 +249,7 @@
           return
         }
         if (this.currentLyric) {
-          this.currentLyric.stop()
+          this.currentLyric = null
           this.playingLyric = ''
           this.currentLineNum = 0
         }
@@ -346,6 +352,7 @@
             height: 100%
             overflow: hidden
             .lines-wrap
+              width: 80%
               margin: auto
               text-align: center
               .line
