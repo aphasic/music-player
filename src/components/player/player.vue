@@ -1,5 +1,5 @@
 <template>
-  <div v-show="player.playList.length > 0">
+  <div v-if="player.playList.length > 0">
     <transition name="normal">
       <div class="normal-player" v-show="player.isFullpage">
         <div class="background">
@@ -28,14 +28,21 @@
               </div>
             </div>
             <div class="slider-item">
-              <div class="lyric-page">
-                <scroll :data="lyricData" ref="lyricScroll" class="scroll-content">
+              <div class="lyric-page" ref="lyricPage">
+                <div class="lyric-control" v-show="!isLyricTouch">
+                  <div class="time">00:48</div>
+                  <div class="icon-wrap">
+                    <i class="icon-play"></i>
+                  </div>
+                </div>
+                <scroll :data="lyricData" ref="lyricScroll" class="scroll-content" :listenScroll="true" @onscroll="onLyricScroll">
                   <div class="lines-wrap">
                     <div v-if="!currentLyric">
                       <p class="line">{{lyricErr}}</p>
                     </div>
                     <div v-if="currentLyric">
                       <p ref="lyricLine" class="line" :class="currentLyricIndex === index ? 'active':''" v-for="(line, index) in currentLyric.lines">{{line.txt}}</p>
+                      <div ref="lyricSpace"></div>
                     </div>
                   </div>
                 </scroll>
@@ -99,12 +106,12 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="currentSong.url" @play="_audioPlay" @pause="_audioPause" @canplay="_canPlay" @timeupdate="_updateTime"></audio>
+    <audio ref="audio" :src="currentSong.url" @play="_toggleLyric" @pause="_toggleLyric" @canplay="_canPlay" @timeupdate="_updateTime"></audio>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
-  import {playerCreatedMixin, playerMixin} from 'controllers/mixin'
+  import {playerMixin} from 'controllers/mixin'
   import progressBar from 'base/progress-bar/progress-bar'
   import progressCircle from 'base/progress-circle/progress-circle'
   import Scroll from 'base/scroll/scroll'
@@ -115,10 +122,9 @@
   const MINI_BTN_WIDTH = 30
   const LYRIC_ERR = '没有歌词~ '
   export default {
-    mixins: [playerCreatedMixin, playerMixin],
+    mixins: [playerMixin],
     data () {
       return {
-        isPlayerShow: false,
         currentTime: 0,
         currentLyric: null,
         currentLyricIndex: -1,
@@ -128,13 +134,19 @@
         zindexClass: 'can-click',
         normalizeTime: normalizeTime,
         lyricErr: LYRIC_ERR,
-        songReady: false                      // audio 是否 canPlay
+        songReady: false,                      // audio 是否 canPlay
+        isLyricTouch: false
       }
     },
-    mounted () {
+    created () {
+      this.hasLyricSpace = false            // 是否已经设置过歌词下的留白的高度
       this._getLyric()
     },
+    mounted () {
+      console.log('/')
+    },
     computed: {
+      // 用于给 scroll 绑定的数据
       lyricData () {
         return this.currentLyric ? this.currentLyric.lines : []
       },
@@ -152,9 +164,6 @@
       }
     },
     methods: {
-      onPlayerCreated (flag) {
-        this.isPlayerShow = flag
-      },
       back () {
         this.setFullPage(false)
       },
@@ -170,6 +179,9 @@
         this.zindexClass = percent === 0 ? 'no-click' : 'can-click'
         this.$refs.middleSlideItem.style.opacity = percent
       },
+      onLyricScroll (pos) {
+        console.log(pos)
+      },
       _play () {
         this.$refs.audio.play()
       },
@@ -178,21 +190,23 @@
       },
       // 考虑到 canplay 播放后可能因为网速而导致中途暂停，加载成功后继续播放
       // 所以将 audio 的 播放和暂停事件提出来，避免音乐暂停了而歌词却在继续播放
-      _audioPlay () {
+      _toggleLyric () {
         if (this.currentLyric) {
           this.currentLyric.togglePlay()
         }
       },
-      _audioPause () {
-        if (this.currentLyric) {
-          this.currentLyric.togglePlay()
-        }
-      },
+      // 每首歌曲加载到可以播放时调用的事件，但是中途可能会因加载导致缓冲暂停
+      // 歌曲开始播放的主要时机
       _canPlay () {
         this.songReady = true
         if (this.player.isPlaying) {
           this.$nextTick(() => {
             this._play()
+            // 在 audio 的 play 事件里面歌词已经获取，则设置歌词播放
+            if (this.currentLyric) {
+              console.log('歌词播放时机：audioReady')
+              this.currentLyric.play()
+            }
             this.$refs.lyricScroll.scrollTo(0, 0, 1000)
           })
         }
@@ -208,9 +222,10 @@
           console.log(this.currentLyric)
           // songReady 为true就说明 audio 已经加载并播放了，即歌词获取较慢
           // 在 audio 的 play 事件里面歌词尚未获取到所以没有设置播放，因此此处要设置歌词播放
-//          if (this.songReady && this.player.isPlaying) {
-//            this.currentLyric.seek(this.currentTime * 1000)
-//          }
+          if (this.songReady && this.player.isPlaying) {
+            console.log('歌词播放时：songReady')
+            this.currentLyric.seek(this.currentTime * 1000)
+          }
         }).catch(() => {
           this.currentLyric = null
           this.playingLyric = LYRIC_ERR
@@ -218,13 +233,19 @@
         })
       },
       _handleLyric ({lineNum, txt}) {
+        console.log(lineNum)
         this.currentLyricIndex = lineNum
-//        this.playingLyric = txt
-//        if (lineNum > 5) {
-//          console.log(this.$refs.lyricScroll)
-//          let line = this.$refs.lyricLine[lineNum - 5]
-//          this.$refs.lyricScroll.scrollToElement(line, 1000)
-//        }
+        this.playingLyric = txt
+        if (lineNum > 5) {
+          let line = this.$refs.lyricLine[lineNum - 5]
+          this.$refs.lyricScroll.scrollToElement(line, 1000)
+        }
+      },
+      // 为保证歌词最后一句可以滚动到歌词页面的正中间
+      // 手动给滚动区域添加页面一半的高度
+      _setLyricspace () {
+        let wrapHeight = this.$refs.lyricPage.clientHeight
+        this.$refs.lyricSpace.style.height = `${1 / 2 * wrapHeight}px`
       }
     },
     components: {
@@ -237,6 +258,10 @@
       'player.isFullpage': function (newFlag) {
         if (newFlag) {
           this.$nextTick(() => {
+            if (!this.hasLyricSpace && this.currentLyric) {
+              this._setLyricspace()
+              this.hasLyricSpace = true
+            }
             this.$refs.lyricScroll.refresh()
           })
         }
@@ -347,6 +372,34 @@
         .lyric-page
           width: 100%
           height: 100%
+          position: relative
+          .lyric-control
+            position: absolute
+            width: 100%
+            height: 32px
+            line-height: 32px
+            color: $color-text-l
+            font-size: $font-size-medium
+            top: 50%
+            left: 0
+            &:before
+              content: ''
+              display: block
+              position: absolute
+              width: 70%
+              top: 50%
+              left: 15%
+              height: 0
+              border-top: 1px dotted $color-text-l
+            .time,.icon-wrap
+              width: 15%
+              height: 100%
+              text-align: center
+              float: left
+            .icon-wrap
+              float: right
+              font-size: 20px
+              padding: 6px 0
           .scroll-content
             width: 100%
             height: 100%
@@ -360,7 +413,7 @@
                 color: $color-text-l
                 font-size: $font-size-medium
                 &.active
-                  color: $color-text
+                  color: $color-theme
     .bottom-content
       position: absolute
       left: 10%

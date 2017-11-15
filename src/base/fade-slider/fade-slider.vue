@@ -156,7 +156,8 @@
       },
       onTouchStart (e) {
         let touch = e.touches[0]
-        this.touch.move = false
+        this.touch.moved = false
+        this.touch.direction = 'x'
         this.touch.startX = touch.pageX
         this.touch.startY = touch.pageY
       },
@@ -165,15 +166,18 @@
         let deltaX = touch.pageX - this.touch.startX
         let deltaY = touch.pageY - this.touch.startY
         this.touch.deltaX = deltaX
-        this.touch.deltaY = deltaY
-        if (Math.abs(deltaY) > Math.abs(deltaX)) {
-          return
-        }
         // 初次move时，设置记录当前应当随着 X 增量而改变位置的元素
         if (!this.touch.moved) {
           // 主要设置 this.touch.key值
           this._setMoveItem(deltaX)
           this.touch.moved = true
+          if (Math.abs(deltaY) > Math.abs(deltaX)) {
+            this.touch.direction = 'y'
+            return
+          }
+        }
+        if (this.touch.direction === 'y') {
+          return
         }
         // 若 key 值为空串，说明需要移动的页是缺失页，则返回
         if (!this.touch.key) {
@@ -191,14 +195,15 @@
       onTouchEnd () {
         // 如果没有 move , 直接返回
         if (!this.touch.moved) {
+          this.touch.moved = false
           return
         }
         // 如果 key 为空串，需要移动的页是缺失页，则不进行移动操作，直接返回
         if (!this.touch.key) {
-          this.touch.moved = false
           return
         }
-        if (Math.abs(this.touch.deltaY) > Math.abs(this.touch.deltaX)) {
+        if (this.touch.direction === 'y') {
+          this.touch.direction = 'x'
           return
         }
         let children = this.$refs.sliderItemsWrap.children
@@ -210,7 +215,6 @@
         this.currentPageIndex = offset === 0 ? moveItem.index : this.middleIndex
         this.$emit('setOpacity', percent)
         moveItem._left = offset
-        this.touch.moved = false
       }
     }
   }
