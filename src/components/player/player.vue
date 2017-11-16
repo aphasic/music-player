@@ -29,13 +29,26 @@
             </div>
             <div class="slider-item">
               <div class="lyric-page" ref="lyricPage">
-                <div class="lyric-control" v-show="!isLyricTouch">
+                <div class="lyric-control" v-show="lyricControl.show">
                   <div class="time">00:48</div>
                   <div class="icon-wrap">
                     <i class="icon-play"></i>
                   </div>
                 </div>
-                <scroll :data="lyricData" ref="lyricScroll" class="scroll-content" :listenScroll="true" @onscroll="onLyricScroll">
+                <scroll
+                  class="scroll-content"
+                  ref="lyricScroll"
+                  :data="lyricData"
+                  :scrollX="false"
+                  :probe-type="probeType"
+                  :listenScroll="true"
+                  :listenScrollStart="true"
+                  :listenScrollEnd="true"
+                  :listenTouchStart="true"
+                  @onscroll="onLyricScroll"
+                  @onscrollStart="onLyricScrollStart"
+                  @onscrollEnd="onLyricScrollEnd"
+                  @ontouchStart="onLyricTouchStart">
                   <div class="lines-wrap">
                     <div v-if="!currentLyric">
                       <p class="line">{{lyricErr}}</p>
@@ -119,31 +132,40 @@
   import Lyric from 'lyric-parser'
   import fadeSlider from 'base/fade-slider/fade-slider'
 
-  const MINI_BTN_WIDTH = 30
-  const LYRIC_ERR = '没有歌词~ '
+  const MINI_BTN_WIDTH = 30          // 迷你播放器中的播放按钮的尺寸
+  const LYRIC_LINE_HEIGHT = 32       // 每行歌词的高度
+  const LYRIC_ERR = '没有歌词~ '      // 没有歌词时的显示文本
+  const LYRIC_SCROLL_START = 5      // 歌词超过第 n 行时才开始滚动
   export default {
     mixins: [playerMixin],
     data () {
       return {
         currentTime: 0,
         currentLyric: null,
-        currentLyricIndex: -1,
+        currentLyricIndex: 0,
         playingLyric: '',
         radius: MINI_BTN_WIDTH,
         percent: 0,
         zindexClass: 'can-click',
         normalizeTime: normalizeTime,
         lyricErr: LYRIC_ERR,
+        lyricControl: {
+          show: false,                        // 是否用户在滑动歌词，控制歌词控制按钮的显示
+          time: 0                             // 滑动歌词时，当前滑动到的歌词对应的时间
+        },
         songReady: false,                      // audio 是否 canPlay
-        isLyricTouch: false
+        probeType: 3
       }
     },
     created () {
+      this.wrapHeight = 0                   // 歌词 scroll 的 wrap 高度
       this.hasLyricSpace = false            // 是否已经设置过歌词下的留白的高度
+      this.isLyricTouching = false          // 记录歌词是否正在被 touch
+      this.lyricScroll = {
+        hasEnd: true
+      }
+      console.log(this.lyricScroll)
       this._getLyric()
-    },
-    mounted () {
-      console.log('/')
     },
     computed: {
       // 用于给 scroll 绑定的数据
@@ -179,8 +201,45 @@
         this.zindexClass = percent === 0 ? 'no-click' : 'can-click'
         this.$refs.middleSlideItem.style.opacity = percent
       },
+      onLyricTouchStart (e) {
+        this.isLyricTouching = true
+        this.lyricScroll.hasEnd = true
+      },
+      onLyricScrollStart () {
+        if (!this.isLyricTouching) {
+          return
+        }
+        this.lyricScroll.hasEnd = false
+        clearTimeout(this.lyricTimer)
+        this.currentLyric.stop()
+        this.lyricControl.show = true
+      },
       onLyricScroll (pos) {
-        console.log(pos)
+        if (!this.isLyricTouching) {
+          return
+        }
+        clearTimeout(this.lyricTimer)
+        let index = Math.ceil((pos.y - 1 / 2 * this.wrapHeight - 1) / LYRIC_LINE_HEIGHT)
+        index = Math.abs(index)
+        if (index >= this.currentLyric.lines.length) {
+          index = this.currentLyric.lines.length - 1
+        }
+        this.currentLyricIndex = index
+      },
+      onLyricScrollEnd () {
+        console.log('end')
+        console.log(this.isLyricTouching)
+        if (!this.isLyricTouching) {
+          return
+        }
+        if (this.lyricScroll.hasEnd) {
+          return
+        }
+        this.isLyricTouching = false
+        this.lyricTimer = setTimeout(() => {
+          this.currentLyric.seek(this.currentTime * 1000)
+          this.lyricControl.show = false
+        }, 1000)
       },
       _play () {
         this.$refs.audio.play()
@@ -229,23 +288,21 @@
         }).catch(() => {
           this.currentLyric = null
           this.playingLyric = LYRIC_ERR
-          this.currentLineNum = 0
+          this.currentLyricIndex = 0
         })
       },
       _handleLyric ({lineNum, txt}) {
-        console.log(lineNum)
         this.currentLyricIndex = lineNum
         this.playingLyric = txt
-        if (lineNum > 5) {
-          let line = this.$refs.lyricLine[lineNum - 5]
-          this.$refs.lyricScroll.scrollToElement(line, 1000)
-        }
+        this._toCurrentLine(1000)
       },
-      // 为保证歌词最后一句可以滚动到歌词页面的正中间
-      // 手动给滚动区域添加页面一半的高度
-      _setLyricspace () {
-        let wrapHeight = this.$refs.lyricPage.clientHeight
-        this.$refs.lyricSpace.style.height = `${1 / 2 * wrapHeight}px`
+      _toCurrentLine (time = 0) {
+        if (this.currentLyricIndex <= LYRIC_SCROLL_START) {
+          this.$refs.lyricScroll.scrollTo(0, 0, time)
+          return
+        }
+        let line = this.$refs.lyricLine[this.currentLyricIndex - LYRIC_SCROLL_START]
+        this.$refs.lyricScroll.scrollToElement(line, time)
       }
     },
     components: {
@@ -258,8 +315,11 @@
       'player.isFullpage': function (newFlag) {
         if (newFlag) {
           this.$nextTick(() => {
+            this.wrapHeight = this.$refs.lyricPage.clientHeight
             if (!this.hasLyricSpace && this.currentLyric) {
-              this._setLyricspace()
+              // 为保证歌词最后一句可以滚动到歌词页面的正中间
+              // 手动给滚动区域添加页面一半的高度
+              this.$refs.lyricSpace.style.height = `${1 / 2 * this.wrapHeight}px`
               this.hasLyricSpace = true
             }
             this.$refs.lyricScroll.refresh()
@@ -276,7 +336,7 @@
         if (this.currentLyric) {
           this.currentLyric = null
           this.playingLyric = ''
-          this.currentLineNum = 0
+          this.currentLyricIndex = 0
         }
         this.currentTime = 0
         this.songReady = false

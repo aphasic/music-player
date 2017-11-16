@@ -1,5 +1,5 @@
 <template>
-  <div ref="wrapper">
+  <div ref="wrapper" @touchstart="onTouchstart">
     <slot>
     </slot>
   </div>
@@ -33,6 +33,26 @@
       listenScroll: {
         type: Boolean,
         default: false
+      },
+      listenScrollStart: {
+        type: Boolean,
+        default: false
+      },
+      listenScrollEnd: {
+        type: Boolean,
+        default: false
+      },
+      listenTouchStart: {
+        type: Boolean,
+        default: false
+      },
+      scrollX: {
+        type: Boolean,
+        default: true
+      },
+      scrollY: {
+        type: Boolean,
+        default: true
       }
     },
     mounted () {
@@ -47,7 +67,9 @@
         }
         this.scroll = new BetterScroll(this.$refs.wrapper, {
           probeType: this.probeType,
-          click: this.click
+          click: this.click,
+          scrollX: this.scrollX,
+          scrollY: this.scrollY
         })
         if (this.listenScroll) {
           let me = this
@@ -55,6 +77,26 @@
             me.$emit('onscroll', pos)
           })
         }
+        if (this.listenScrollEnd) {
+          let me = this
+          this.scroll.on('scrollEnd', (pos) => {
+            me.$emit('onscrollEnd', pos)
+          })
+        }
+        if (this.listenScrollStart) {
+          let me = this
+          this.scroll.on('scrollStart', (pos) => {
+            me.$emit('onscrollStart', pos)
+          })
+        }
+      },
+      // 存在自动滚动时（如歌词的自动播放）
+      // 需要监听根据对 touch 事件的监听判断 scroll 过程是自动播放触发的还是用户 touch 触发的
+      onTouchstart (e) {
+        if (!this.listenTouchStart) {
+          return
+        }
+        this.$emit('ontouchStart', e)
       },
       disable () {
         this.scroll && this.scroll.disable()
