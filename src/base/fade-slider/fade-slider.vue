@@ -1,7 +1,7 @@
 <template>
   <div class="slider" ref="slider">
-    <div class="slider-items-wrap" ref="sliderItemsWrap" @touchstart="onTouchStart"
-         @touchmove="onTouchMove"
+    <div class="slider-items-wrap" ref="sliderItemsWrap" @touchstart.capture="onTouchStart"
+         @touchmove.capture="onTouchMove"
          @touchend="onTouchEnd">
       <slot>
       </slot>
@@ -183,6 +183,7 @@
         if (!this.touch.key) {
           return
         }
+        e.stopPropagation()
         // 移动item
         let moveItem = this.pages[this.touch.key]
         let children = this.$refs.sliderItemsWrap.children
