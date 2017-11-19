@@ -39,23 +39,27 @@
                   class="scroll-content"
                   ref="lyricScroll"
                   :data="lyricData"
-                  :scrollX="false"
                   :probe-type="probeType"
                   :listenScroll="true"
                   :listenScrollStart="true"
                   :listenScrollEnd="true"
                   :listenTouchStart="true"
+                  :listenTouchMove="true"
+                  :listenTouchEnd="true"
                   @onscroll="onLyricScroll"
                   @onscrollStart="onLyricScrollStart"
                   @onscrollEnd="onLyricScrollEnd"
-                  @ontouchStart="onLyricTouchStart">
+                  @ontouchStart="onLyricTouchStart"
+                  @ontouchMove="onLyricTouchMove"
+                  @ontouchEnd="onLyricTouchEnd">
                   <div class="lines-wrap">
                     <div v-if="!currentLyric">
                       <p class="line">{{lyricErr}}</p>
                     </div>
                     <div v-if="currentLyric">
+                      <div ref="lyricTopSpace"></div>
                       <p ref="lyricLine" class="line" :class="currentLyricIndex === index ? 'active':''" v-for="(line, index) in currentLyric.lines">{{line.txt}}</p>
-                      <div ref="lyricSpace"></div>
+                      <div ref="lyricBottomSpace"></div>
                     </div>
                   </div>
                 </scroll>
@@ -160,11 +164,11 @@
     created () {
       this.wrapHeight = 0                   // 歌词 scroll 的 wrap 高度
       this.hasLyricSpace = false            // 是否已经设置过歌词下的留白的高度
-      this.isLyricTouching = false          // 记录歌词是否正在被 touch
       this.lyricScroll = {
-        hasEnd: true
+        hasEnd: true,
+        isLyricTouching: false,
+        moved: false
       }
-      console.log(this.lyricScroll)
       this._getLyric()
     },
     computed: {
@@ -202,11 +206,24 @@
         this.$refs.middleSlideItem.style.opacity = percent
       },
       onLyricTouchStart (e) {
-        this.isLyricTouching = true
+        console.log('start')
+        this.lyricScroll.isLyricTouching = true
         this.lyricScroll.hasEnd = true
+        this.lyricScroll.moved = false
+      },
+      onLyricTouchMove (e) {
+        console.log('move')
+        this.lyricScroll.moved = true
+      },
+      onLyricTouchEnd (e) {
+        console.log('end')
+        if (!this.lyricScroll.moved) {
+          this.lyricScroll.isLyricTouching = false
+          this.lyricScroll.hasEnd = false
+        }
       },
       onLyricScrollStart () {
-        if (!this.isLyricTouching) {
+        if (!this.lyricScroll.isLyricTouching) {
           return
         }
         this.lyricScroll.hasEnd = false
@@ -215,11 +232,13 @@
         this.lyricControl.show = true
       },
       onLyricScroll (pos) {
-        if (!this.isLyricTouching) {
+        if (!this.lyricScroll.isLyricTouching) {
           return
         }
+        console.log('//')
         clearTimeout(this.lyricTimer)
-        let index = Math.ceil((pos.y - 1 / 2 * this.wrapHeight - 1) / LYRIC_LINE_HEIGHT)
+        let spaceHeight = 1 / 2 * this.wrapHeight - 1 / 2 * LYRIC_LINE_HEIGHT
+        let index = Math.ceil((pos.y + spaceHeight - 1 / 2 * this.wrapHeight - 1) / LYRIC_LINE_HEIGHT)
         index = Math.abs(index)
         if (index >= this.currentLyric.lines.length) {
           index = this.currentLyric.lines.length - 1
@@ -227,19 +246,19 @@
         this.currentLyricIndex = index
       },
       onLyricScrollEnd () {
-        console.log('end')
-        console.log(this.isLyricTouching)
-        if (!this.isLyricTouching) {
+        if (!this.lyricScroll.isLyricTouching) {
           return
         }
         if (this.lyricScroll.hasEnd) {
           return
         }
-        this.isLyricTouching = false
+        this.lyricScroll.isLyricTouching = false
         this.lyricTimer = setTimeout(() => {
-          this.currentLyric.seek(this.currentTime * 1000)
+          if (this.player.isPlaying) {
+            this.currentLyric.seek(this.currentTime * 1000)
+          }
           this.lyricControl.show = false
-        }, 1000)
+        }, 2000)
       },
       _play () {
         this.$refs.audio.play()
@@ -266,7 +285,6 @@
               console.log('歌词播放时机：audioReady')
               this.currentLyric.play()
             }
-            this.$refs.lyricScroll.scrollTo(0, 0, 1000)
           })
         }
       },
@@ -278,7 +296,6 @@
       _getLyric () {
         this.currentSong.getLyric().then((lyric) => {
           this.currentLyric = new Lyric(lyric, this._handleLyric)
-          console.log(this.currentLyric)
           // songReady 为true就说明 audio 已经加载并播放了，即歌词获取较慢
           // 在 audio 的 play 事件里面歌词尚未获取到所以没有设置播放，因此此处要设置歌词播放
           if (this.songReady && this.player.isPlaying) {
@@ -292,17 +309,25 @@
         })
       },
       _handleLyric ({lineNum, txt}) {
+        console.log(txt)
         this.currentLyricIndex = lineNum
         this.playingLyric = txt
         this._toCurrentLine(1000)
       },
       _toCurrentLine (time = 0) {
-        if (this.currentLyricIndex <= LYRIC_SCROLL_START) {
-          this.$refs.lyricScroll.scrollTo(0, 0, time)
-          return
+        let index = 0
+        if (this.currentLyricIndex > LYRIC_SCROLL_START) {
+          index = this.currentLyricIndex - LYRIC_SCROLL_START
         }
-        let line = this.$refs.lyricLine[this.currentLyricIndex - LYRIC_SCROLL_START]
+        let line = this.$refs.lyricLine[index]
         this.$refs.lyricScroll.scrollToElement(line, time)
+      },
+      // 为保证歌词最后一句和第一句都可以滚动到歌词页面的正中间
+      // 手动给滚动区域上下各添加页面一半的高度
+      _initLyricSpace () {
+        let spaceHeight = 1 / 2 * this.wrapHeight - 1 / 2 * LYRIC_LINE_HEIGHT
+        this.$refs.lyricTopSpace.style.height = `${spaceHeight}px`
+        this.$refs.lyricBottomSpace.style.height = `${spaceHeight}px`
       }
     },
     components: {
@@ -315,14 +340,14 @@
       'player.isFullpage': function (newFlag) {
         if (newFlag) {
           this.$nextTick(() => {
+            // 只有 isFullpage 为 true 时其子 DOM 才会渲染，所以 wrapHeight 要在此获取
             this.wrapHeight = this.$refs.lyricPage.clientHeight
             if (!this.hasLyricSpace && this.currentLyric) {
-              // 为保证歌词最后一句可以滚动到歌词页面的正中间
-              // 手动给滚动区域添加页面一半的高度
-              this.$refs.lyricSpace.style.height = `${1 / 2 * this.wrapHeight}px`
+              this._initLyricSpace()
               this.hasLyricSpace = true
             }
             this.$refs.lyricScroll.refresh()
+            this._toCurrentLine()
           })
         }
       },
@@ -465,8 +490,9 @@
             height: 100%
             overflow: hidden
             .lines-wrap
-              width: 80%
+              width: 90%
               margin: auto
+              overflow: ellipsis
               text-align: center
               .line
                 line-height: 32px

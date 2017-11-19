@@ -1,5 +1,5 @@
 <template>
-  <div ref="wrapper" @touchstart="onTouchstart">
+  <div ref="wrapper" @touchstart="onTouchstart" @touchmove="onTouchmove" @touchend="onTouchend">
     <slot>
     </slot>
   </div>
@@ -46,9 +46,17 @@
         type: Boolean,
         default: false
       },
+      listenTouchMove: {
+        type: Boolean,
+        default: false
+      },
+      listenTouchEnd: {
+        type: Boolean,
+        default: false
+      },
       scrollX: {
         type: Boolean,
-        default: true
+        default: false
       },
       scrollY: {
         type: Boolean,
@@ -97,6 +105,18 @@
           return
         }
         this.$emit('ontouchStart', e)
+      },
+      onTouchmove (e) {
+        if (!this.listenTouchMove) {
+          return
+        }
+        this.$emit('ontouchMove', e)
+      },
+      onTouchend (e) {
+        if (!this.listenTouchEnd) {
+          return
+        }
+        this.$emit('ontouchEnd', e)
       },
       disable () {
         this.scroll && this.scroll.disable()
