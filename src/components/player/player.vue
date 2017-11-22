@@ -30,8 +30,8 @@
             <div class="slider-item">
               <div class="lyric-page" ref="lyricPage">
                 <div class="lyric-control" v-show="lyricControl.show">
-                  <div class="time">00:48</div>
-                  <div class="icon-wrap">
+                  <div class="time">{{normalizeTime(lyricControl.time)}}</div>
+                  <div class="icon-wrap" @click="updatePlay">
                     <i class="icon-play"></i>
                   </div>
                 </div>
@@ -71,13 +71,13 @@
           <div class="progress-wrap">
             <span class="time time-left">{{normalizeTime(currentTime)}}</span>
             <div class="progress">
-              <progress-bar :percent="percent"></progress-bar>
+              <progress-bar :percent="percent" @progressChange="onProgressChange"></progress-bar>
             </div>
             <span class="time time-right">{{normalizeTime(currentSong.duration)}}</span>
           </div>
           <div class="control-wrap">
-            <div class="control-icon">
-              <i class="icon-sequence"></i>
+            <div class="control-icon" @click="switchMode">
+              <i :class="modeIcon"></i>
             </div>
             <div class="control-icon">
               <i class="icon-prev"></i>
@@ -123,7 +123,7 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="currentSong.url" @play="_toggleLyric" @pause="_toggleLyric" @canplay="_canPlay" @timeupdate="_updateTime"></audio>
+    <audio ref="audio" :src="currentSong.url" @pause="audioPause" @error="audioError" @canplay="audioCanPlay" @ended="audioEnded" @timeupdate="_updateTime"></audio>
   </div>
 </template>
 
@@ -135,6 +135,7 @@
   import {normalizeTime} from 'common/js/util'
   import Lyric from 'lyric-parser'
   import fadeSlider from 'base/fade-slider/fade-slider'
+  import {playmode} from 'controllers/player'
 
   const MINI_BTN_WIDTH = 30          // 迷你播放器中的播放按钮的尺寸
   const LYRIC_LINE_HEIGHT = 32       // 每行歌词的高度
@@ -149,13 +150,13 @@
         currentLyricIndex: 0,
         playingLyric: '',
         radius: MINI_BTN_WIDTH,
-        percent: 0,
         zindexClass: 'can-click',
         normalizeTime: normalizeTime,
         lyricErr: LYRIC_ERR,
         lyricControl: {
           show: false,                        // 是否用户在滑动歌词，控制歌词控制按钮的显示
-          time: 0                             // 滑动歌词时，当前滑动到的歌词对应的时间
+          time: 0,                             // 滑动歌词时，当前滑动到的歌词对应的时间
+          clicked: false                      // 歌词控制条中的播放按钮是否被点击
         },
         songReady: false,                      // audio 是否 canPlay
         probeType: 3
@@ -179,14 +180,17 @@
       playIcon () {
         return this.player.isPlaying ? 'icon-pause' : 'icon-play'
       },
+      modeIcon () {
+        return this.player.playMode === playmode.sequence ? 'icon-sequence' : this.player.playMode === playmode.loop ? 'icon-loop' : 'icon-random'
+      },
       miniPlayIcon () {
         return this.player.isPlaying ? 'icon-pause-mini' : 'icon-play-mini'
       },
       cdClass () {
         return this.player.isPlaying ? 'play' : 'play pause'
       },
-      progress () {
-        return this.currentTime
+      percent () {
+        return this.currentSong ? this.currentTime / this.currentSong.duration : 0
       }
     },
     methods: {
@@ -197,26 +201,37 @@
         this.setFullPage(true)
       },
       togglePlaying () {
+        if (!this.songReady) {
+          return
+        }
         let newFlag = !this.player.isPlaying
         this.setPlayingState(newFlag)
         newFlag ? this._play() : this._pause()
+        if (this.currentLyric) {
+          this.currentLyric.togglePlay()
+        }
+      },
+      switchMode () {
+        let mode = this.player.playMode + 1
+        if (mode === playmode.length) {
+          mode = 0
+        }
+        this._changePlayList(this.player.sequenceList, mode)
+        console.log(this.player.playMode)
       },
       setOpacity (percent) {
         this.zindexClass = percent === 0 ? 'no-click' : 'can-click'
         this.$refs.middleSlideItem.style.opacity = percent
       },
       onLyricTouchStart (e) {
-        console.log('start')
         this.lyricScroll.isLyricTouching = true
         this.lyricScroll.hasEnd = true
         this.lyricScroll.moved = false
       },
       onLyricTouchMove (e) {
-        console.log('move')
         this.lyricScroll.moved = true
       },
       onLyricTouchEnd (e) {
-        console.log('end')
         if (!this.lyricScroll.moved) {
           this.lyricScroll.isLyricTouching = false
           this.lyricScroll.hasEnd = false
@@ -230,12 +245,15 @@
         clearTimeout(this.lyricTimer)
         this.currentLyric.stop()
         this.lyricControl.show = true
+        this.lyricControl.clicked = false
       },
       onLyricScroll (pos) {
         if (!this.lyricScroll.isLyricTouching) {
           return
         }
-        console.log('//')
+        if (this.lyricControl.clicked) {
+          return
+        }
         clearTimeout(this.lyricTimer)
         let spaceHeight = 1 / 2 * this.wrapHeight - 1 / 2 * LYRIC_LINE_HEIGHT
         let index = Math.ceil((pos.y + spaceHeight - 1 / 2 * this.wrapHeight - 1) / LYRIC_LINE_HEIGHT)
@@ -244,12 +262,16 @@
           index = this.currentLyric.lines.length - 1
         }
         this.currentLyricIndex = index
+        this.lyricControl.time = this.currentLyric.lines[index].time / 1000
       },
       onLyricScrollEnd () {
         if (!this.lyricScroll.isLyricTouching) {
           return
         }
         if (this.lyricScroll.hasEnd) {
+          return
+        }
+        if (this.lyricControl.clicked) {
           return
         }
         this.lyricScroll.isLyricTouching = false
@@ -260,6 +282,32 @@
           this.lyricControl.show = false
         }, 2000)
       },
+      onProgressChange (progress) {
+        let percent = progress.percent
+        let endFlag = progress.endFlag
+        this._pause()
+        this.currentTime = this.currentSong.duration * percent
+        this._toCurrentTime()
+        if (endFlag) {
+          this.$refs.audio.currentTime = this.currentTime
+          this._play()
+          if (!this.player.isPlaying) {
+            this.setPlayingState(true)
+          }
+        }
+      },
+      updatePlay () {
+        this.lyricControl.show = false
+        this.lyricControl.clicked = true
+        clearTimeout(this.lyricTimer)
+        this.currentTime = this.lyricControl.time
+        this.$refs.audio.currentTime = this.lyricControl.time
+        this._play()
+        this._toCurrentTime()
+        if (!this.player.isPlaying) {
+          this.setPlayingState(true)
+        }
+      },
       _play () {
         this.$refs.audio.play()
       },
@@ -267,31 +315,42 @@
         this.$refs.audio.pause()
       },
       // 考虑到 canplay 播放后可能因为网速而导致中途暂停，加载成功后继续播放
-      // 所以将 audio 的 播放和暂停事件提出来，避免音乐暂停了而歌词却在继续播放
-      _toggleLyric () {
-        if (this.currentLyric) {
-          this.currentLyric.togglePlay()
+      // 所以将 audio 的 暂停事件提出来，避免音乐暂停了而歌词却在继续播放
+      audioPause () {
+        if (this.player.isPlaying) {
+          this.setPlayingState(false)
+          if (this.currentLyric) {
+            this.currentLyric.stop()
+          }
         }
       },
       // 每首歌曲加载到可以播放时调用的事件，但是中途可能会因加载导致缓冲暂停
-      // 歌曲开始播放的主要时机
-      _canPlay () {
+      audioCanPlay () {
         this.songReady = true
-        if (this.player.isPlaying) {
-          this.$nextTick(() => {
-            this._play()
-            // 在 audio 的 play 事件里面歌词已经获取，则设置歌词播放
-            if (this.currentLyric) {
-              console.log('歌词播放时机：audioReady')
-              this.currentLyric.play()
-            }
-          })
+      },
+      audioEnded () {
+        let nextIndex = this.player.currentIndex + 1
+        let len = this.player.playList.length
+        if (this.player.playMode === playmode.sequence && nextIndex === len) {
+          return
         }
+        if (this.player.playMode === playmode.loop) {
+          this.currentTime = 0
+          this.$refs.audio.currentTime = 0
+          this._play()
+          if (this.currentLyric) {
+            this.currentLyric.seek(0)
+          }
+        } else {
+          this._next()
+        }
+      },
+      audioError () {
+        this._next()
       },
       _updateTime (e) {
         let currentTime = e.target.currentTime
         this.currentTime = currentTime
-        this.percent = currentTime / this.currentSong.duration
       },
       _getLyric () {
         this.currentSong.getLyric().then((lyric) => {
@@ -303,18 +362,33 @@
             this.currentLyric.seek(this.currentTime * 1000)
           }
         }).catch(() => {
-          this.currentLyric = null
           this.playingLyric = LYRIC_ERR
-          this.currentLyricIndex = 0
         })
       },
+      _next () {
+        let nextIndex = this.player.currentIndex + 1
+        let playList = this.player.playList
+        if (nextIndex === playList.length) {
+          nextIndex = 0
+        }
+        this.setCurrentIndex(nextIndex)
+      },
       _handleLyric ({lineNum, txt}) {
-        console.log(txt)
         this.currentLyricIndex = lineNum
         this.playingLyric = txt
         this._toCurrentLine(1000)
       },
+      _toCurrentTime () {
+        if (this.currentLyric) {
+          this.currentLyric.seek(this.currentTime * 1000)
+        }
+      },
+      // 歌词滚动到 currentLyricIndex 对应的位置
+      // time 为滚动渐变的时间
       _toCurrentLine (time = 0) {
+        if (!this.currentLyric) {
+          return
+        }
         let index = 0
         if (this.currentLyricIndex > LYRIC_SCROLL_START) {
           index = this.currentLyricIndex - LYRIC_SCROLL_START
@@ -328,6 +402,11 @@
         let spaceHeight = 1 / 2 * this.wrapHeight - 1 / 2 * LYRIC_LINE_HEIGHT
         this.$refs.lyricTopSpace.style.height = `${spaceHeight}px`
         this.$refs.lyricBottomSpace.style.height = `${spaceHeight}px`
+      },
+      _initCurrentLyric () {
+        this.currentLyric = null
+        this.playingLyric = ''
+        this.currentLyricIndex = 0
       }
     },
     components: {
@@ -352,20 +431,24 @@
         }
       },
       currentSong: function (newSong, oldSong) {
+        this.songReady = false
         if (!newSong.id) {
           return
         }
-        if (newSong.id === oldSong) {
+        if (newSong.id === oldSong.id) {
           return
         }
-        if (this.currentLyric) {
-          this.currentLyric = null
-          this.playingLyric = ''
-          this.currentLyricIndex = 0
+        if (!this.player.isPlaying) {
+          this.setPlayingState(true)
         }
-        this.currentTime = 0
-        this.songReady = false
+        if (this.currentLyric) {
+          this._initCurrentLyric()
+        }
         this._getLyric()
+        this.currentTime = 0
+        this.$nextTick(() => {
+          this._play()
+        })
       }
     }
   }
@@ -460,6 +543,7 @@
           position: relative
           .lyric-control
             position: absolute
+            z-index: 300
             width: 100%
             height: 32px
             line-height: 32px

@@ -10,12 +10,21 @@ export const playerMixin = {
     ])
   },
   methods: {
+    // 更新 mode
+    // 更新 顺序列表
+    // 同时自动更新 播放列表和 currentSong 的 index
     _changePlayList (sequenceList, mode) {
-      if (mode !== playmode.random) {
-        this.setPlayList(sequenceList)
-        return true
+      if (this.player.sequenceList !== sequenceList) {
+        this.setCurrentIndex(0)
+        this.setSequenceList(sequenceList)
       }
-      let playList = shuffle(sequenceList)
+      if (this.player.playMode !== mode) {
+        this.setPlayMode(mode)
+      }
+      let playList = sequenceList
+      if (mode === playmode.random) {
+        playList = shuffle(sequenceList)
+      }
       this.setPlayList(playList)
     },
     ...mapMutations({

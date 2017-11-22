@@ -173,7 +173,6 @@
           this.touch.moved = true
           if (Math.abs(deltaY) > Math.abs(deltaX)) {
             this.touch.direction = 'y'
-            return
           }
         }
         if (this.touch.direction === 'y') {

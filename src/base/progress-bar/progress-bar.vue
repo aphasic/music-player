@@ -1,10 +1,11 @@
 <template>
-  <div class="progress-bar" ref="progressBar">
+  <div class="progress-bar" ref="progressBar" @touchstart.prevent="onTouchStart" @touchmove.prevent="onTouchMove" @touchend="onTouchEnd">
     <div class="progress" ref="progress"></div>
     <div class="progress-btn" ref="progressBtn"></div>
   </div>
 </template>
 <script type="text/ecmascript-6">
+//  import {deleteUnit} from 'common/js/util'
   const BTN_WIDHT = 16
   export default {
     name: 'progressBar',
@@ -14,16 +15,51 @@
         default: 0
       }
     },
+    created () {
+      this.touch = {}
+      this.bartouch = {}
+      this.btn_left = 0
+    },
     methods: {
-      _offset (offsetWidth) {
+      _setOffset (percent) {
+        let offsetWidth = (this.$refs.progressBar.clientWidth - BTN_WIDHT) * percent
         this.$refs.progress.style.width = `${offsetWidth}px`
         this.$refs.progressBtn.style.left = `${offsetWidth}px`
+        this.btn_left = offsetWidth
+      },
+      onTouchStart (e) {
+        this.touch.started = true
+        this.touch.startX = e.touches[0].pageX
+        let wrapPageX = this.$refs.progressBar.getBoundingClientRect().left
+        let wrapWidth = this.$refs.progressBar.clientWidth
+        let offset = e.touches[0].pageX - wrapPageX
+        let percent = offset / wrapWidth
+        this.touch.startOffset = e.touches[0].pageX - wrapPageX
+        this.touch.percent = percent
+        this._setOffset(this.touch.percent)
+        this.$emit('progressChange', {percent: this.touch.percent, endFlag: false})
+      },
+      onTouchMove (e) {
+        if (!this.touch.started) {
+          return
+        }
+        let wrapWidth = this.$refs.progressBar.clientWidth
+        let deltaX = e.touches[0].pageX - this.touch.startX
+        let offset = Math.max(0, Math.min(this.touch.startOffset + deltaX, wrapWidth))
+        let percent = offset / wrapWidth
+        this.touch.percent = percent
+        this._setOffset(this.touch.percent)
+        this.$emit('progressChange', {percent: this.touch.percent, endFlag: false})
+      },
+      onTouchEnd (e) {
+        this.touch.started = false
+        this._setOffset(this.touch.percent)
+        this.$emit('progressChange', {percent: this.touch.percent, endFlag: true})
       }
     },
     watch: {
-      percent (val) {
-        let offsetWidth = (this.$refs.progressBar.clientWidth - BTN_WIDHT) * val
-        this._offset(offsetWidth)
+      percent (percent) {
+        this._setOffset(percent)
       }
     }
   }
