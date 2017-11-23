@@ -22,10 +22,15 @@ export const playerMixin = {
         this.setPlayMode(mode)
       }
       let playList = sequenceList
+      let currentSong = sequenceList[this.player.currentIndex]
       if (mode === playmode.random) {
         playList = shuffle(sequenceList)
       }
+      if (this.player.playList.length) {
+        currentSong = this.player.playList[this.player.currentIndex]
+      }
       this.setPlayList(playList)
+      this.setCurrentIndex(playList.indexOf(currentSong))
     },
     ...mapMutations({
       setFullPage: 'SET_PLAYER_FULLPAGE',

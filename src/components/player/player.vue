@@ -53,14 +53,14 @@
                   @ontouchMove="onLyricTouchMove"
                   @ontouchEnd="onLyricTouchEnd">
                   <div class="lines-wrap">
-                    <div v-if="!currentLyric">
+                    <div v-show="currentLyric" ref="lyricTopSpace"></div>
+                    <div v-show="!currentLyric">
                       <p class="line">{{lyricErr}}</p>
                     </div>
                     <div v-if="currentLyric">
-                      <div ref="lyricTopSpace"></div>
                       <p ref="lyricLine" class="line" :class="currentLyricIndex === index ? 'active':''" v-for="(line, index) in currentLyric.lines">{{line.txt}}</p>
-                      <div ref="lyricBottomSpace"></div>
                     </div>
+                    <div v-show="currentLyric" ref="lyricBottomSpace"></div>
                   </div>
                 </scroll>
               </div>
@@ -79,13 +79,13 @@
             <div class="control-icon" @click="switchMode">
               <i :class="modeIcon"></i>
             </div>
-            <div class="control-icon">
+            <div class="control-icon" @click="prevSong">
               <i class="icon-prev"></i>
             </div>
             <div class="control-icon control-play-icon">
               <i :class="playIcon" @click="togglePlaying"></i>
             </div>
-            <div class="control-icon">
+            <div class="control-icon" @click="nextSong">
               <i class="icon-next"></i>
             </div>
             <div class="control-icon">
@@ -113,7 +113,7 @@
         </div>
         <div class="right operators">
           <div class="control-icon">
-            <progress-circle :radius="radius" :percent="percent">
+            <progress-circle :radius="radius" :percent="percent" @click="togglePlaying">
               <i class="icon-mini" @click.stop="togglePlaying" :class="miniPlayIcon"></i>
             </progress-circle>
           </div>
@@ -159,12 +159,14 @@
           clicked: false                      // 歌词控制条中的播放按钮是否被点击
         },
         songReady: false,                      // audio 是否 canPlay
+        updateLyric: false,                    // 是否需要根据 audio 的 currentTime 来更新歌词进度
         probeType: 3
       }
     },
     created () {
       this.wrapHeight = 0                   // 歌词 scroll 的 wrap 高度
       this.hasLyricSpace = false            // 是否已经设置过歌词下的留白的高度
+      this.lyricHeights = []
       this.lyricScroll = {
         hasEnd: true,
         isLyricTouching: false,
@@ -181,7 +183,11 @@
         return this.player.isPlaying ? 'icon-pause' : 'icon-play'
       },
       modeIcon () {
-        return this.player.playMode === playmode.sequence ? 'icon-sequence' : this.player.playMode === playmode.loop ? 'icon-loop' : 'icon-random'
+        for (let key in playmode) {
+          if (this.player.playMode === playmode[key]) {
+            return `icon-${key}`
+          }
+        }
       },
       miniPlayIcon () {
         return this.player.isPlaying ? 'icon-pause-mini' : 'icon-play-mini'
@@ -217,7 +223,12 @@
           mode = 0
         }
         this._changePlayList(this.player.sequenceList, mode)
-        console.log(this.player.playMode)
+      },
+      prevSong () {
+        this._prev()
+      },
+      nextSong () {
+        this._next()
       },
       setOpacity (percent) {
         this.zindexClass = percent === 0 ? 'no-click' : 'can-click'
@@ -255,12 +266,7 @@
           return
         }
         clearTimeout(this.lyricTimer)
-        let spaceHeight = 1 / 2 * this.wrapHeight - 1 / 2 * LYRIC_LINE_HEIGHT
-        let index = Math.ceil((pos.y + spaceHeight - 1 / 2 * this.wrapHeight - 1) / LYRIC_LINE_HEIGHT)
-        index = Math.abs(index)
-        if (index >= this.currentLyric.lines.length) {
-          index = this.currentLyric.lines.length - 1
-        }
+        let index = this._getPosyIndex(pos.y)
         this.currentLyricIndex = index
         this.lyricControl.time = this.currentLyric.lines[index].time / 1000
       },
@@ -321,6 +327,7 @@
           this.setPlayingState(false)
           if (this.currentLyric) {
             this.currentLyric.stop()
+            this.updateLyric = false
           }
         }
       },
@@ -348,20 +355,56 @@
       audioError () {
         this._next()
       },
+      _getPosyIndex (posY) {
+        let index = 0
+        let offsetY = posY + 1 / 2 * LYRIC_LINE_HEIGHT
+        if (offsetY < 0) {
+          let len = this.lyricHeights.length
+          if (Math.abs(offsetY) >= this.lyricHeights[len - 1]) {
+            return len - 1
+          }
+          for (var i = 0; i < len; i++) {
+            if (Math.abs(offsetY) <= this.lyricHeights[i]) {
+              index = i
+              break
+            }
+          }
+        }
+        return index
+      },
+      _updateLyricHeights () {
+        this.$nextTick(() => {
+          let len = this.currentLyric.lines.length
+          let lyricLines = this.$refs.lyricLine
+          let heightSum = 0
+          this.lyricHeights = []
+          for (var i = 0; i < len; i++) {
+            let _height = lyricLines[i].offsetHeight
+            this.lyricHeights.push(heightSum)
+            heightSum += _height
+          }
+        })
+      },
       _updateTime (e) {
         let currentTime = e.target.currentTime
         this.currentTime = currentTime
+        if (!this.updateLyric && this.currentLyric) {
+          console.log(currentTime)
+          this.currentLyric.seek(currentTime * 1000)
+          this.updateLyric = true
+        }
       },
       _getLyric () {
         this.currentSong.getLyric().then((lyric) => {
           this.currentLyric = new Lyric(lyric, this._handleLyric)
+          console.log(this.currentLyric)
           // songReady 为true就说明 audio 已经加载并播放了，即歌词获取较慢
           // 在 audio 的 play 事件里面歌词尚未获取到所以没有设置播放，因此此处要设置歌词播放
-          if (this.songReady && this.player.isPlaying) {
-            console.log('歌词播放时：songReady')
-            this.currentLyric.seek(this.currentTime * 1000)
+          if (this.player.isFullpage) {
+            this._updateLyricHeights()
           }
         }).catch(() => {
+          console.log('error')
           this.playingLyric = LYRIC_ERR
         })
       },
@@ -372,6 +415,14 @@
           nextIndex = 0
         }
         this.setCurrentIndex(nextIndex)
+      },
+      _prev () {
+        let prevIndex = this.player.currentIndex - 1
+        let len = this.player.playList.length
+        if (prevIndex < 0) {
+          prevIndex = len - 1
+        }
+        this.setCurrentIndex(prevIndex)
       },
       _handleLyric ({lineNum, txt}) {
         this.currentLyricIndex = lineNum
@@ -407,6 +458,7 @@
         this.currentLyric = null
         this.playingLyric = ''
         this.currentLyricIndex = 0
+        this.$refs.lyricScroll.scrollTo(0, 0, 0)
       }
     },
     components: {
@@ -421,17 +473,23 @@
           this.$nextTick(() => {
             // 只有 isFullpage 为 true 时其子 DOM 才会渲染，所以 wrapHeight 要在此获取
             this.wrapHeight = this.$refs.lyricPage.clientHeight
-            if (!this.hasLyricSpace && this.currentLyric) {
+            if (!this.hasLyricSpace) {
               this._initLyricSpace()
               this.hasLyricSpace = true
+              if (this.currentLyric) {
+                this._updateLyricHeights()
+              }
             }
-            this.$refs.lyricScroll.refresh()
-            this._toCurrentLine()
+            if (this.currentLyric) {
+              this.$refs.lyricScroll.refresh()
+              this._toCurrentLine()
+            }
           })
         }
       },
       currentSong: function (newSong, oldSong) {
         this.songReady = false
+        this.updateLyric = false
         if (!newSong.id) {
           return
         }
@@ -442,6 +500,7 @@
           this.setPlayingState(true)
         }
         if (this.currentLyric) {
+          this.currentLyric.stop()
           this._initCurrentLyric()
         }
         this._getLyric()
@@ -576,7 +635,6 @@
             .lines-wrap
               width: 90%
               margin: auto
-              overflow: ellipsis
               text-align: center
               .line
                 line-height: 32px
