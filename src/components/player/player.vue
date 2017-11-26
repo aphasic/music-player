@@ -71,7 +71,7 @@
           <div class="progress-wrap">
             <span class="time time-left">{{normalizeTime(currentTime)}}</span>
             <div class="progress">
-              <progress-bar :percent="percent" @progressChange="onProgressChange"></progress-bar>
+              <progress-bar ref="progressBar" :percent="percent" @progressChange="onProgressChange"></progress-bar>
             </div>
             <span class="time time-right">{{normalizeTime(currentSong.duration)}}</span>
           </div>
@@ -145,12 +145,12 @@
     mixins: [playerMixin],
     data () {
       return {
-        currentTime: 0,
-        currentLyric: null,
-        currentLyricIndex: 0,
-        playingLyric: '',
-        radius: MINI_BTN_WIDTH,
-        zindexClass: 'can-click',
+        currentTime: 0,                      // 音乐当前播放时间
+        currentLyric: null,                  // 当前歌词
+        currentLyricIndex: 0,                // 歌词当前播放第几行
+        playingLyric: '',                    // CD 页面显示的歌词 text
+        radius: MINI_BTN_WIDTH,              // 迷你播放器中的播放按钮的尺寸, 传给迷你播放器中的 progress-radius
+        zindexClass: 'can-click',            // CD 页面，作为 fade-slider 的中间页，zindexClass 记录它是否可被点击
         normalizeTime: normalizeTime,
         lyricErr: LYRIC_ERR,
         lyricControl: {
@@ -388,8 +388,8 @@
       _updateTime (e) {
         let currentTime = e.target.currentTime
         this.currentTime = currentTime
+        // 在 audio 首次 updatetime 的时候让歌词播放
         if (!this.updateLyric && this.currentLyric) {
-          console.log(currentTime)
           this.currentLyric.seek(currentTime * 1000)
           this.updateLyric = true
         }
@@ -473,6 +473,7 @@
           this.$nextTick(() => {
             // 只有 isFullpage 为 true 时其子 DOM 才会渲染，所以 wrapHeight 要在此获取
             this.wrapHeight = this.$refs.lyricPage.clientHeight
+            this.$refs.progressBar.setOffset(this.percent)
             if (!this.hasLyricSpace) {
               this._initLyricSpace()
               this.hasLyricSpace = true

@@ -17,15 +17,16 @@
     },
     created () {
       this.touch = {}
-      this.bartouch = {}
-      this.btn_left = 0
     },
     methods: {
       _setOffset (percent) {
         let offsetWidth = (this.$refs.progressBar.clientWidth - BTN_WIDHT) * percent
         this.$refs.progress.style.width = `${offsetWidth}px`
         this.$refs.progressBtn.style.left = `${offsetWidth}px`
-        this.btn_left = offsetWidth
+      },
+      // 给父组件调用的方法
+      setOffset (percent) {
+        this._setOffset(percent)
       },
       onTouchStart (e) {
         this.touch.started = true
@@ -59,6 +60,9 @@
     },
     watch: {
       percent (percent) {
+        if (this.touch.started) {
+          return
+        }
         this._setOffset(percent)
       }
     }
