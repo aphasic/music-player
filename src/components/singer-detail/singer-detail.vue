@@ -43,6 +43,7 @@
     created () {
       getSingerDetail(this.singer.id).then((res) => {
         if (res.code === ERR_OK) {
+          console.log(res.data.list)
           this.songList = this._normalizeSong(res.data.list)
           this.singerInfo = {
             fans: res.data.fans,

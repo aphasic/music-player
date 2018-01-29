@@ -65,6 +65,22 @@ routes.get('/getLyric', (req, res) => {
     console.log(err)
   })
 })
+
+// 获取 audio 的 vkey 参数
+routes.get('/getSongVkey', (req, res) => {
+  let url = "https://c.y.qq.com/base/fcgi-bin/fcg_music_express_mobile3.fcg"
+  axios.get(url, {
+    headers: {
+      referer: 'https://y.qq.com/',
+      host: 'y.qq.com'
+    },
+    params: req.query
+  }).then((response) => {
+    res.json(response.data)
+  }).catch((err) => {
+    console.log(err)
+  })
+})
 app.use('/api', routes)
 
 

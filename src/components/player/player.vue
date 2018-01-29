@@ -173,6 +173,7 @@
         moved: false
       }
       this._getLyric()
+      this._getAudioSrc()
     },
     computed: {
       // 用于给 scroll 绑定的数据
@@ -334,6 +335,7 @@
       // 每首歌曲加载到可以播放时调用的事件，但是中途可能会因加载导致缓冲暂停
       audioCanPlay () {
         this.songReady = true
+        this.$refs.audio.play()
       },
       audioEnded () {
         let nextIndex = this.player.currentIndex + 1
@@ -397,7 +399,7 @@
       _getLyric () {
         this.currentSong.getLyric().then((lyric) => {
           this.currentLyric = new Lyric(lyric, this._handleLyric)
-          console.log(this.currentLyric)
+          this.currentLyric.stop()
           // songReady 为true就说明 audio 已经加载并播放了，即歌词获取较慢
           // 在 audio 的 play 事件里面歌词尚未获取到所以没有设置播放，因此此处要设置歌词播放
           if (this.player.isFullpage) {
@@ -406,6 +408,12 @@
         }).catch(() => {
           console.log('error')
           this.playingLyric = LYRIC_ERR
+        })
+      },
+      _getAudioSrc () {
+        this.currentSong.getAudioSrc().then((url) => {
+          console.log('src')
+          console.log(this.currentSong)
         })
       },
       _next () {
@@ -505,6 +513,7 @@
           this._initCurrentLyric()
         }
         this._getLyric()
+        this._getAudioSrc()
         this.currentTime = 0
         this.$nextTick(() => {
           this._play()

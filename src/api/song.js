@@ -31,3 +31,27 @@ export function getLyric (musicid, songtype) {
     console.log(err)
   })
 }
+
+// 获取音乐 audio 资源 url 的参数 vkey
+export function getSongVkey (musicid, filename, guid) {
+  let url = 'api/getSongVkey'
+  let data = {
+    songmid: musicid,
+    g_tk: 5381,
+    loginUin: 0,
+    hostUin: 0,
+    platform: 'yqq',
+    needNewCode: 0,
+    cid: 205361747,
+    uin: 0,
+    filename: filename,
+    guid: guid
+  }
+  return axios.get(url, {
+    params: data
+  }).then((res) => {
+    return Promise.resolve(res.data)
+  }).catch((err) => {
+    console.log(err)
+  })
+}
