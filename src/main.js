@@ -22,3 +22,13 @@ Vue.use(VueLazyload, {
   error: require('common/image/default.png'),
   loading: require('common/image/loading.gif')
 })
+
+// 将 Number转为 String , 过万时以万为单位
+Vue.filter('toThousand', function (num) {
+  let str = num.toString()
+  let len = str.length
+  if (len > 4) {
+    return `${str.substring(0, len - 4)}万`
+  }
+  return str
+})

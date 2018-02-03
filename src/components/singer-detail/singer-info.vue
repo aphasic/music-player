@@ -9,7 +9,7 @@
       </h2>
       <div class="content" ref="content">
         <h2 class="title-name">{{info.name}}</h2>
-        <p><span class="desc">粉丝:{{info.fans}}</span></p>
+        <p><span class="desc">粉丝:{{info.fans | toThousand}}</span></p>
         <div class="play-btn">
           <i class="icon-play"></i>
           <span class="text-play">随机播放全部</span>
@@ -20,7 +20,6 @@
 </template>
 
 <script type="text/ecmascript-6">
-  import {normalizeFans} from 'controllers/singer'
   export default {
     name: 'singer-info',
     props: {
@@ -41,7 +40,6 @@
       }
     },
     created () {
-      this.info.fans = normalizeFans(this.info.fans)
       this.bgStyle = `background-image:url(${this.info.imgurl})`
     },
     mounted () {

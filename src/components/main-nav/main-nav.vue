@@ -7,6 +7,9 @@
       <router-link tag="a" class="link" to="/singer"><span>歌手</span></router-link>
     </li>
     <li class="list-item">
+      <router-link tag="a" class="link" to="/disc"><span>精选歌单</span></router-link>
+    </li>
+    <li class="list-item">
       <router-link tag="a" class="link" to="/rank"><span>排行</span></router-link>
     </li>
     <li class="list-item">
