@@ -26,6 +26,8 @@
   import {ERR_OK} from 'api/config'
   import {getDiscList} from 'api/disc'
   import {discInterval} from 'controllers/disc'
+  const LoadRefreshDelay = 20
+  const DataRefreshDelay = 100
   export default {
     name: 'disc',
     data () {
@@ -43,6 +45,7 @@
     },
     mounted () {
       this.scrollHeight = this.$refs.scroll.$el.offsetHeight
+      this.$refs.scroll.refresh()
     },
     computed: {
       currentEin () {
@@ -58,15 +61,12 @@
         })
       },
       // isLoading 值发生改变时调用，用于改变 isLoading 同时刷新 scroll
-      _loadingChange () {
+      _loadingChange (refreshDelay) {
         let _this = this
-        this.isLoading = !this.isLoading
+        _this.isLoading = !_this.isLoading
         setTimeout(() => {
           _this.$refs.scroll.refresh()
-        }, 20)
-//        this.$nextTick(() => {
-//          _this.$refs.scroll.refresh()
-//        })
+        }, refreshDelay)
       },
       _loadNextList () {
         let sin = this.currentEin + 1
@@ -75,15 +75,19 @@
             let newList = res.data.list
             this.disclist.push(...newList)
             this.currentSin = sin
-            this._loadingChange()
+            this._loadingChange(DataRefreshDelay)
+//            let _this = this
+//            _this.isLoading = !_this.isLoading
+//            setTimeout(() => {
+//              _this.$refs.scroll.refresh()
+//            }, 100)
           }
         })
       },
       onscroll (pos) {
-        console.log(this.disclist.length)
         let discListHeight = this.$refs.discList.$el.offsetHeight
         if (!this.isLoading && (pos.y < (this.scrollHeight - discListHeight))) {
-          this._loadingChange()
+          this._loadingChange(LoadRefreshDelay)
           this._loadNextList()
         }
       }
@@ -101,7 +105,7 @@
     height: 100%
     position: relative
     #main_header
-      height: 65px
+      height: 35px
       padding: 0 5%
       display: flex
       justify-content: space-around
@@ -109,6 +113,8 @@
       font-size: $font-size-medium
       color: $color-text-l
       .h-list-title
+        height: 35px
+        line-height: 35px
         flex: 0 0 auto
         color: $color-text-l
       .sort-tag-wrap
@@ -125,7 +131,7 @@
 
     #main_body
       position: absolute
-      top: 65px
+      top: 35px
       bottom: 0
       overflow: hidden
       .scroll-content

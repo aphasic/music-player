@@ -3,7 +3,7 @@
     <ul class="disc-list">
       <li class="disc-list-item" v-for="disc in disclist">
         <div class="icon">
-          <img class="disc-cover" :src="disc.imgurl" alt="disc">
+          <img class="disc-cover" v-lazy="disc.imgurl" alt="disc">
           <div class="icon-footer">
             <span class="left">
               <i class="fa fa-headphones"></i>
@@ -54,11 +54,14 @@
           padding: 0 5%
           position: absolute
           z-index: 3
+          font-size: 28px
           height: 1.5em
           line-height: 1.5em
-          bottom: 1em
+          bottom: 0
           display: flex
           justify-content: space-between
+          .left
+            font-size: 0.5em
       .text
         margin-top: 5px
         line-height: 1.3em
