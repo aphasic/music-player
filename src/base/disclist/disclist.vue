@@ -1,7 +1,7 @@
 <template>
   <div>
     <ul class="disc-list">
-      <li class="disc-list-item" v-for="disc in disclist">
+      <li class="disc-list-item" v-for="disc in disclist" @click="onItemClick(disc)">
         <div class="icon">
           <img class="disc-cover" v-lazy="disc.imgurl" alt="disc">
           <div class="icon-footer">
@@ -29,6 +29,11 @@
       disclist: {
         type: Array,
         default: []
+      }
+    },
+    methods: {
+      onItemClick (disc) {
+        this.$emit('selectItem', disc)
       }
     }
   }

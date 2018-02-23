@@ -7,6 +7,9 @@ const mutations = {
   [types.SET_SINGER] (state, singer) {
     state.singer = singer
   },
+  [types.SET_DISC] (state, disc) {
+    state.disc = disc
+  },
   [types.SET_PLAYER_CREATED] (state, flag) {
     state.isPlayerCreated = flag
   },

@@ -41,17 +41,7 @@
       }
     },
     created () {
-      getSingerDetail(this.singer.id).then((res) => {
-        if (res.code === ERR_OK) {
-          console.log(res.data.list)
-          this.songList = this._normalizeSong(res.data.list)
-          this.singerInfo = {
-            fans: res.data.fans,
-            name: this.singer.name,
-            imgurl: this.singer.imgurl
-          }
-        }
-      })
+      this._getDetail()
     },
     mounted () {
       this.$nextTick(() => {
@@ -63,6 +53,23 @@
       ...mapGetters(['singer'])
     },
     methods: {
+      _getDetail () {
+        if (!this.singer.id) {
+          this.$router.push('/singer')
+          return
+        }
+        getSingerDetail(this.singer.id).then((res) => {
+          if (res.code === ERR_OK) {
+            console.log(res.data.list)
+            this.songList = this._normalizeSong(res.data.list)
+            this.singerInfo = {
+              fans: res.data.fans,
+              name: this.singer.name,
+              imgurl: this.singer.imgurl
+            }
+          }
+        })
+      },
       _normalizeSong (resData) {
 //        console.log('singerDetailData:')
 //        console.log(resData)

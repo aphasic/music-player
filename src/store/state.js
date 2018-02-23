@@ -3,6 +3,7 @@
  */
 const state = {
   singer: {},
+  disc: {},
   isPlayerCreated: false,
   player: {
     isPlaying: false,

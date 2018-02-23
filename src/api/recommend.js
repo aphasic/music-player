@@ -12,7 +12,6 @@ export function getRecommend () {
     uin: 0,
     needNewCode: 1
   })
-
   return jsonp(url, data, options)
 }
 // 获取推荐歌单列表

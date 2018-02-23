@@ -2,7 +2,7 @@
   <div v-if="player.playList.length > 0">
     <transition name="normal">
       <div class="normal-player" v-show="player.isFullpage">
-        <div class="background">
+        <div class="h-img-background-blur">
           <img :src="currentSong.image" alt="img">
         </div>
         <div class="top-content">
@@ -532,18 +532,6 @@
     bottom: 0
     z-index: 200
     background: $color-highlight-background
-    .background
-      position: absolute
-      left: 0
-      top: 0
-      right: 0
-      bottom: 0
-      z-index: -1
-      opacity: 0.6
-      filter: blur(20px)
-      img
-        width: 100%
-        height: 100%
     .top-content
       position: relative
       text-align: center

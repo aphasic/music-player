@@ -42,6 +42,31 @@ routes.get('/getDiscList', (req, res) => {
     console.log(err)
   })
 })
+
+// 获取歌单详情
+routes.get('/getDiscDetail', (req, res) => {
+  let url = "https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg"
+  axios.get(url, {
+    headers: {
+      referer: 'https://y.qq.com/',
+      host: 'y.qq.com'
+    },
+    params: req.query
+  }).then((response) => {
+    let ret = response.data
+    if (typeof ret === 'string') {
+      let reg = /^\w+\(({[^()]+})\)$/
+      let matches = ret.match(reg)
+      if (matches) {
+        ret = JSON.parse(matches[1])
+      }
+    }
+    res.json(ret)
+  }).catch((err) => {
+    console.log(err)
+  })
+})
+
 // 获取歌词
 routes.get('/getLyric', (req, res) => {
   let url = "https://c.y.qq.com/lyric/fcgi-bin/fcg_query_lyric.fcg"

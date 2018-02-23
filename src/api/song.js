@@ -15,13 +15,6 @@ export function getLyric (musicid, songtype) {
     categoryId: 10000000,
     pcachetime: +new Date(),
     format: 'json'
-    // uin: 0,
-    // platform: 'h5',
-    // needNewCode: 1,
-    // nobase64: 1,
-    // musicid: musicid,
-    // songtype: songtype,
-    // _: '1509629806220'
   })
   return axios.get(url, {
     params: data
