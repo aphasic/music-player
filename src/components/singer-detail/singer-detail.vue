@@ -2,7 +2,16 @@
   <transition name="slide">
     <div class="h-full-page">
       <div class="singer-info-wrap" ref="singerInfoWrap">
-        <singer-info  :info="singerInfo" :scrollY="scrollY" @goBack="_goBack" v-if="songList.length"></singer-info>
+        <detail-info  :title="singerInfo.name" :bgStyle="bgStyle" :scrollY="scrollY" @goBack="_goBack" v-if="songList.length">
+          <div slot="content" class="singer-info-content">
+            <h2 class="title-name">{{singerInfo.name}}</h2>
+            <p><span class="desc">粉丝:{{singerInfo.fans | toThousand}}</span></p>
+            <div class="random-play-btn">
+              <i class="icon-play"></i>
+              <span class="text-play">随机播放全部</span>
+            </div>
+          </div>
+        </detail-info>
       </div>
       <scroll class="scroll-content" :data="songList" :probeType="probeType" :listenScroll="true" @onscroll="onscroll" ref="scroll">
         <div>
@@ -25,7 +34,7 @@
   import Songlist from 'base/songlist/songlist'
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
-  import SingerInfo from './singer-info.vue'
+  import DetailInfo from 'base/detail-info/detail-info'
   const COLOR_BACKGROUND = '#222'
   export default {
     name: 'singer-detail',
@@ -37,7 +46,8 @@
         singerInfo: {},
         listBgColor: COLOR_BACKGROUND,
         probeType: 3,
-        scrollY: 0
+        scrollY: 0,
+        bgStyle: ''            // singer-info 处的背景样式
       }
     },
     created () {
@@ -45,6 +55,9 @@
     },
     mounted () {
       this.$nextTick(() => {
+        if (!this.$refs.singerInfoWrap) {
+          return
+        }
         let imageHeight = this.$refs.singerInfoWrap.offsetHeight
         this.$refs.scroll.$el.style.top = `${imageHeight}px`
       })
@@ -67,6 +80,7 @@
               name: this.singer.name,
               imgurl: this.singer.imgurl
             }
+            this.bgStyle = `background-image:url(${this.singerInfo.imgurl})`
           }
         })
       },
@@ -75,7 +89,7 @@
 //        console.log(resData)
         return resData.map((song) => {
           let data = song.musicData
-          return createSong(data)
+          return createSong(1, data)
         })
       },
       _goBack () {
@@ -103,7 +117,7 @@
       Songlist,
       Scroll,
       Loading,
-      SingerInfo
+      DetailInfo
     }
   }
 </script>

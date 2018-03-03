@@ -398,6 +398,7 @@
       },
       _getLyric () {
         this.currentSong.getLyric().then((lyric) => {
+          console.log(lyric)
           this.currentLyric = new Lyric(lyric, this._handleLyric)
           this.currentLyric.stop()
           // songReady 为true就说明 audio 已经加载并播放了，即歌词获取较慢

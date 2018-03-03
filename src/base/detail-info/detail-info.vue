@@ -1,16 +1,18 @@
 <template>
-  <div class="singer-info" ref="singerInfo">
+  <div class="detail-info">
     <div class="wrap" ref="wrap" :style="bgStyle">
+      <slot name="bgImage"></slot>
       <h2 class="title-name" ref="top">
         <div class="icon-wrap">
           <i class="icon-back" @click="clickBack"></i>
         </div>
-        <span ref="topName" class="top-name">{{info.name}}</span>
+        <span ref="topName" class="top-name">{{title}}</span>
       </h2>
-      <div class="content" ref="content">
-        <h2 class="title-name">{{info.name}}</h2>
-        <p><span class="desc">粉丝:{{info.fans | toThousand}}</span></p>
-        <div class="play-btn">
+      <div class="content-wrap" ref="contentWrap">
+        <slot name="content"></slot>
+      </div>
+      <div v-if="hasListTitle" class="song-list-title">
+        <div class="random-play-btn">
           <i class="icon-play"></i>
           <span class="text-play">随机播放全部</span>
         </div>
@@ -21,11 +23,19 @@
 
 <script type="text/ecmascript-6">
   export default {
-    name: 'singer-info',
+    name: 'detail-info',
     props: {
-      info: {
-        type: Object,
-        default: {}
+      hasListTitle: {
+        type: Boolean,
+        default: false
+      },
+      title: {
+        type: String,
+        default: ''
+      },
+      bgStyle: {
+        type: String,
+        default: ''
       },
       scrollY: {
         type: Number,
@@ -36,11 +46,8 @@
       return {
         topHeight: 0,
         wrapHeight: 0,
-        bgStyle: ''
+        isClassifyTitleShow: true
       }
-    },
-    created () {
-      this.bgStyle = `background-image:url(${this.info.imgurl})`
     },
     mounted () {
       this.topHeight = this.$refs.top.offsetHeight
@@ -58,9 +65,9 @@
         this.$refs.wrap.style.height = `${_height}px`
         if (this.scrollY <= 0 && _height >= this.topHeight) {
           let _opacity = Math.abs((this.wrapHeight - this.topHeight + this.scrollY) / (this.wrapHeight - this.topHeight))
-          this.$refs.content.style.opacity = _opacity
+          this.$refs.contentWrap.style.opacity = _opacity
         } else if (_height < this.topHeight) {
-          this.$refs.content.style.opacity = 0
+          this.$refs.contentWrap.style.opacity = 0
           this.$refs.topName.style.opacity = 1
           this.$refs.wrap.style.height = `${this.topHeight}px`
         }
@@ -73,6 +80,7 @@
   @import "~common/stylus/mixin"
   @import "~common/stylus/variable"
   .title-name
+    height: 40px
     padding: 5px
     font-size: $font-size-large
     text-align: center
@@ -87,7 +95,8 @@
     background-size: cover
     background-position: center center
     min-height: 50px
-    z-index: 80
+    background-color: #2c2424
+    z-index: 100
     &:before
       content: ''
       display: block
@@ -99,7 +108,6 @@
       top: 0
     .title-name
       position: relative
-      z-index: 100
       .top-name
         opacity: 0
         transition: opacity 1s;
@@ -114,33 +122,63 @@
         transform: translateY(-50%)
         color: $color-theme
         font-size: $font-size-large-x
-    .content
+        &:hover
+          cursor: pointer
+    .content-wrap
       position: absolute
+      top: 50px
       bottom: 0
       left: 0
       width: 100%
-      text-align: center
-      .desc
-        color: rgba(255,255,255,0.5)
-        text-with-line(rgba(255,255,255,0.1))
-      .play-btn
-        box-sizing: border-box
-        width: 135px
-        padding: 7px 0
-        margin: 10px auto
+      .singer-info-content
+        width: 100%
+        position: absolute
+        bottom: 0
+        left: 0
         text-align: center
-        border: 1px solid $color-theme
-        color: $color-theme
-        border-radius: 100px
-        font-size: 0
-        .icon-play
-          display: inline-block
-          vertical-align: middle
-          margin-right: 6px
-          font-size: $font-size-medium-x
-        .text-play
-          display: inline-block
-          vertical-align: middle
-          font-size: $font-size-small
+        .desc
+          color: rgba(255,255,255,0.5)
+          text-with-line(rgba(255,255,255,0.1))
+
+      .disc-info-content
+        width: 84%
+        padding: 0 8%
+        position: absolute
+        top: 50%
+        margin-top: -90px
+        .h-media-middle
+          .icon
+            width: 140px
+            height: 140px
+            flex: 0 0 140px
+            position: relative
+            .icon-footer
+              position: absolute
+              bottom: 0
+              padding: 0 5%
+              line-height: 30px
+              font-size: $font-size-small
+          .text
+            .line
+              margin: 10px 0
+              color: $color-text
+            .title
+              font-size: $font-size-medium-x
+            .author
+              img
+                width: 30px
+                height: 30px
+                margin-right: 10px
+                border-radius: 50%
+                vertical-align: middle
+            .description
+              color: $color-text-ll
+    .song-list-title
+      width: 100%
+      height: 50px
+      border: 1px solid #222
+      background: #222
+      position: absolute
+      bottom: -50px
 </style>
 
