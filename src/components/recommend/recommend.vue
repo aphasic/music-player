@@ -14,7 +14,7 @@
         <div class="recommend-disc">
           <h2 class="h-list-title">热门歌单推荐</h2>
           <ul class="disc-list-wrap">
-            <li class="list-item" v-for="item in discList">
+            <li class="list-item" v-for="item in discList" @click="selectDisc(item)">
               <div class="h-media-middle">
                 <div class="icon">
                   <img v-lazy="item.imgurl" alt="img">
@@ -42,6 +42,7 @@
   import Slider from 'base/slider/slider'
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
+  import {mapMutations} from 'vuex'
   export default {
     mixins: [playerCreatedMixin],
     data () {
@@ -79,7 +80,16 @@
         if (flag === true) {
           this.$refs.scroll.refresh()
         }
-      }
+      },
+      selectDisc (disc) {
+        this.$router.push({
+          path: `/disc/${disc.dissid}`
+        })
+        this.setDisc(disc)
+      },
+      ...mapMutations({
+        setDisc: 'SET_DISC'
+      })
     },
     components: {
       Slider,

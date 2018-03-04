@@ -81,7 +81,7 @@ export function createSong (fromList, songData) {
         desc: songData.title,
         albumname: songData.album.name,
         image: `https://y.gtimg.cn/music/photo_new/T002R300x300M000${songData.album.mid}.jpg?max_age=2592000`,
-        duration: 0,
+        duration: songData.interval,
         songtype: songData.songtype,
         filename: `C400${songData.mid}.m4a`,
         guid: _guid

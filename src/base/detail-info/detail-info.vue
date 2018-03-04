@@ -173,6 +173,10 @@
                 vertical-align: middle
             .description
               color: $color-text-ll
+      .rank-info-content
+        position: absolute
+        width: 100%
+        bottom: 0
     .song-list-title
       width: 100%
       height: 50px

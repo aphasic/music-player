@@ -14,20 +14,20 @@ export const playerMixin = {
     // 更新 顺序列表
     // 同时自动更新 播放列表和 currentSong 的 index
     _changePlayList (sequenceList, mode) {
+      let playList = sequenceList
+      let currentSong = sequenceList[this.player.currentIndex]
       if (this.player.sequenceList !== sequenceList) {
         this.setCurrentIndex(0)
         this.setSequenceList(sequenceList)
       }
       if (this.player.playMode !== mode) {
         this.setPlayMode(mode)
+        if (this.player.playList.length) {
+          currentSong = this.player.playList[this.player.currentIndex]
+        }
       }
-      let playList = sequenceList
-      let currentSong = sequenceList[this.player.currentIndex]
       if (mode === playmode.random) {
         playList = shuffle(sequenceList)
-      }
-      if (this.player.playList.length) {
-        currentSong = this.player.playList[this.player.currentIndex]
       }
       this.setPlayList(playList)
       this.setCurrentIndex(playList.indexOf(currentSong))

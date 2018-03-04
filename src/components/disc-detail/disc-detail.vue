@@ -8,30 +8,24 @@
           </div>
           <div slot="content" class="disc-info-content">
             <div class="h-media-middle">
-                <div class="icon">
-                  <img :src="disc.imgurl" alt="img">
-                  <div class="icon-footer">
-                    <i class="fa fa-headphones"></i>
-                    <span>{{disc.listennum | toThousand}}</span>
-                  </div>
-                </div>
-                <div class="text">
-                  <h3 class="line title h-ellipse-2-line">{{disc.dissname}}</h3>
-                  <p class="line author h-ellipse-1-line">
-                    <img v-lazy="discInfo.headurl" alt="author">
-                    {{disc.creator.name}}
-                  </p>
-                  <p class="line description h-ellipse-1-line">
-                    简介:{{discInfo.desc}}
-                  </p>
-                </div>
+              <icon-with-footer :imgurl="disc.imgurl" :listennum="disc.listennum"></icon-with-footer>
+              <div class="text">
+                <h3 class="line title h-ellipse-2-line">{{disc.dissname}}</h3>
+                <p class="line author h-ellipse-1-line">
+                  <img v-lazy="discInfo.headurl" alt="author">
+                  {{disc.creator.name}}
+                </p>
+                <p class="line description h-ellipse-1-line">
+                  简介:{{discInfo.desc}}
+                </p>
+              </div>
               </div>
           </div>
         </detail-info>
       </div>
       <scroll class="scroll-content" :data="songList" :probeType="probeType" :listenScroll="true" @onscroll="onscroll" ref="scroll">
         <div>
-          <songlist :songlist="songList" :bgColor="listBgColor"></songlist>
+          <songlist :songlist="songList" :bgColor="listBgColor" @selectItem="selectItem"></songlist>
         </div>
       </scroll>
       <loading v-if="!songList.length"></loading>
@@ -43,6 +37,9 @@
   import Songlist from 'base/songlist/songlist'
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
+  import {playerMixin, playerCreatedMixin} from 'controllers/mixin'
+  import {playerHeight} from 'controllers/player'
+  import IconWithFooter from 'base/icon-with-footer/icon-with-footer'
   import {createSong} from 'controllers/song'
   import {mapGetters} from 'vuex'
   import {getDiscDetail} from 'api/disc'
@@ -52,6 +49,7 @@
   const LIST_TITLE_HEIGHT = 50
   export default {
     name: 'disc-detail',
+    mixins: [playerMixin, playerCreatedMixin],
     data () {
       return {
         probeType: 3,
@@ -87,6 +85,7 @@
         getDiscDetail(this.disc.dissid).then((res) => {
           if (res.code === ERR_OK) {
             let disc = res.cdlist[0]
+            console.log(res)
             this.songList = this._normalizeSong(disc.songlist)
             this.discInfo = {
               desc: disc.desc,
@@ -105,13 +104,28 @@
         return resData.map((song) => {
           return createSong(2, song)
         })
+      },
+      selectItem (song, index) {
+        if (!this.player.isCreated) {
+          this.setIsCreated(true)
+        }
+        this.setSequenceList(this.songList)
+        this.setCurrentIndex(index)
+        this._changePlayList(this.songList, this.player.playMode)
+      },
+      onPlayerCreated (flag) {
+        if (flag === true) {
+          this.$refs.scroll.$el.style.bottom = `${playerHeight}px`
+          this.$refs.scroll.refresh()
+        }
       }
     },
     components: {
       DetailInfo,
       Scroll,
       Songlist,
-      Loading
+      Loading,
+      IconWithFooter
     }
   }
 </script>

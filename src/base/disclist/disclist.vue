@@ -2,18 +2,7 @@
   <div>
     <ul class="disc-list">
       <li class="disc-list-item" v-for="disc in disclist" @click="onItemClick(disc)">
-        <div class="icon">
-          <img class="disc-cover" v-lazy="disc.imgurl" alt="disc">
-          <div class="icon-footer">
-            <span class="left">
-              <i class="fa fa-headphones"></i>
-              <span>{{disc.listennum | toThousand}}</span>
-            </span>
-            <span class="right">
-              <i class="fa fa-play-circle"></i>
-            </span>
-          </div>
-        </div>
+        <icon-with-footer :imgurl="disc.imgurl" :listennum="disc.listennum" :isPlayIconShow="true" @onPlayClick="onPlayClick(disc)"></icon-with-footer>
         <div class="text">
           <p class="h-ellipse-2-line">{{disc.dissname}}</p>
           <p class="name">{{disc.creator.name}}</p>
@@ -23,6 +12,7 @@
   </div>
 </template>
 <script type="text/ecmascript-6">
+  import IconWithFooter from 'base/icon-with-footer/icon-with-footer'
   export default {
     name: 'disclist',
     props: {
@@ -34,7 +24,13 @@
     methods: {
       onItemClick (disc) {
         this.$emit('selectItem', disc)
+      },
+      onPlayClick (disc) {
+        this.$emit('clickPlay', disc)
       }
+    },
+    components: {
+      IconWithFooter
     }
   }
 </script>
@@ -50,23 +46,6 @@
       float: left
       font-size: $font-size-small
       color: $color-text
-      .icon
-        position: relative
-        .disc-cover
-          width: 100%
-        .icon-footer
-          width: 90%
-          padding: 0 5%
-          position: absolute
-          z-index: 3
-          font-size: 28px
-          height: 1.5em
-          line-height: 1.5em
-          bottom: 0
-          display: flex
-          justify-content: space-between
-          .left
-            font-size: 0.5em
       .text
         margin-top: 5px
         line-height: 1.3em

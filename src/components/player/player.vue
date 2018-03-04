@@ -82,7 +82,7 @@
             <div class="control-icon" @click="prevSong">
               <i class="icon-prev"></i>
             </div>
-            <div class="control-icon control-play-icon">
+            <div class="control-icon control-play-icon" :class="isDisabled">
               <i :class="playIcon" @click="togglePlaying"></i>
             </div>
             <div class="control-icon" @click="nextSong">
@@ -189,6 +189,9 @@
             return `icon-${key}`
           }
         }
+      },
+      isDisabled () {
+        return this.songReady ? '' : 'disable'
       },
       miniPlayIcon () {
         return this.player.isPlaying ? 'icon-pause-mini' : 'icon-play-mini'
@@ -398,7 +401,6 @@
       },
       _getLyric () {
         this.currentSong.getLyric().then((lyric) => {
-          console.log(lyric)
           this.currentLyric = new Lyric(lyric, this._handleLyric)
           this.currentLyric.stop()
           // songReady 为true就说明 audio 已经加载并播放了，即歌词获取较慢
@@ -716,6 +718,8 @@
         padding: 0 10px
         font-size: 30px
         color: $color-theme-d
+        &.disable
+          color: $color-theme-d
         .icon-mini
           position: absolute
           left: 0

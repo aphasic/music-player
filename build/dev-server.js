@@ -77,13 +77,11 @@ routes.get('/getLyric', (req, res) => {
   }).then((response) => {
     let ret = response.data
     if (typeof ret === 'string') {
-      let reg = /^\w+\(({[^()]+})\)$/
-      let matches = ret.match(reg)
-      if (matches) {
-        ret = JSON.parse(matches[1])
-      }
+      let index_1 = ret.indexOf('{')
+      let index_2 = ret.lastIndexOf('}')
+      ret = JSON.parse(ret.slice(index_1, index_2 + 1))
     }
-    res.json(response.data)
+    res.json(ret)
   }).catch((err) => {
     console.log(err)
   })

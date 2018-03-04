@@ -3,6 +3,7 @@
  */
 export const singer = state => state.singer
 export const disc = state => state.disc
+export const rank = state => state.rank
 export const player = state => state.player
 export const currentSong = (state) => {
   return state.player.playList[state.player.currentIndex] || {}

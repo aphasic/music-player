@@ -4,6 +4,7 @@
 const state = {
   singer: {},
   disc: {},
+  rank: {},
   isPlayerCreated: false,
   player: {
     isPlaying: false,

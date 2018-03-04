@@ -10,7 +10,7 @@
     <div id="main_body">
       <scroll class="scroll-content" :data="disclist" :probeType="probeType" :listenScroll="true" @onscroll="onscroll"  ref="scroll">
         <div>
-          <disclist :disclist="disclist" ref="discList" @selectItem="selectItem"></disclist>
+          <disclist :disclist="disclist" ref="discList" @selectItem="selectItem" @clickPlay="clickPlay"></disclist>
           <div class="loading-box" v-if="isLoading">
             <loading :title="loadingText"></loading>
           </div>
@@ -102,6 +102,10 @@
           path: `/disc/${disc.dissid}`
         })
         this.setDisc(disc)
+      },
+      clickPlay (disc) {
+        console.log('//')
+        console.log(disc)
       },
       ...mapMutations({
         setDisc: 'SET_DISC'
